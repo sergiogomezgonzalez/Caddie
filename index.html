@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B3D2E">
+<title>Caddie · Entrenador de swing</title>
+<style>
+:root{
+  --bg:#0B3D2E; --bg-2:#0E4A38; --bg-3:#115540;
+  --line:#F4F7F5; --text:#F4F7F5;
+  --muted:rgba(244,247,245,.60); --muted-2:rgba(244,247,245,.38);
+  --gold:#C9A84C; --gold-soft:rgba(201,168,76,.16);
+  --red:#E0675B; --green:#5FBF8F;
+  --hair:rgba(244,247,245,.12);
+  --skin:#E6C3A0; --skin-d:#B98F66; --skin-s:#F2D9BF;
+  --glove:#F2F4F2; --glove-d:#A9B3AC;
+  --radius:14px; --tap:48px; --maxw:460px;
+  font-synthesis-weight:none;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+h1,h2,h3,h4{margin:0;font-weight:500;letter-spacing:-.02em;line-height:1.25}
+p{margin:0}
+::selection{background:var(--gold);color:#0B3D2E}
+
+.app{max-width:var(--maxw);margin:0 auto;min-height:100dvh;position:relative}
+.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  background:rgba(11,61,46,.86);backdrop-filter:saturate(1.4) blur(14px);
+  -webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--hair)}
+.brand{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.brand-mark{width:26px;height:26px;flex:none}
+.brand-name{font-size:17px;letter-spacing:-.025em;white-space:nowrap}
+.brand-sub{font-size:11px;color:var(--muted-2);letter-spacing:.09em;text-transform:uppercase;margin-top:-3px}
+.icon-btn{width:var(--tap);height:var(--tap);min-width:var(--tap);display:grid;place-items:center;
+  border-radius:50%;margin:-11px -12px -11px 0}
+.icon-btn:active{background:rgba(255,255,255,.07)}
+.icon-btn svg{width:22px;height:22px}
+main{padding:0 16px 120px}
+
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;max-width:var(--maxw);margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);background:rgba(10,52,39,.93);
+  backdrop-filter:saturate(1.4) blur(18px);-webkit-backdrop-filter:saturate(1.4) blur(18px);
+  border-top:1px solid var(--hair);padding-bottom:env(safe-area-inset-bottom)}
+.tab{min-height:var(--tap);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:9px 2px 7px;color:var(--muted-2);transition:color .18s}
+.tab svg{width:21px;height:21px}
+.tab span{font-size:10.5px;letter-spacing:.02em}
+.tab[aria-selected="true"]{color:var(--gold)}
+.tab:active{opacity:.6}
+
+.page-head{padding:22px 0 18px}
+.page-title{font-size:27px;letter-spacing:-.03em}
+.page-sub{color:var(--muted);font-size:14.5px;margin-top:5px}
+.sec-label{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);
+  margin:26px 0 10px;font-weight:500}
+.hr{height:1px;background:var(--hair);border:0;margin:24px 0}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:var(--tap);width:100%;
+  border-radius:var(--radius);background:var(--gold);color:#0B3D2E;font-weight:600;
+  letter-spacing:-.01em;padding:0 18px}
+.btn:active{transform:scale(.985);filter:brightness(.94)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--hair)}
+.btn-ghost:active{background:rgba(255,255,255,.06)}
+.btn-done{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(201,168,76,.4)}
+.btn-sm{min-height:44px;font-size:14px;font-weight:500;border-radius:12px;padding:0 12px}
+.btn svg,.btn-sm svg{width:17px;height:17px;flex:none}
+
+.note{background:var(--gold-soft);border-left:2px solid var(--gold);padding:12px 14px;
+  border-radius:0 10px 10px 0;font-size:14px;color:rgba(244,247,245,.86)}
+.err{background:rgba(224,103,91,.14);border-left:2px solid var(--red);padding:12px 14px;
+  border-radius:0 10px 10px 0;font-size:14px;color:#F6C9C3;word-break:break-word}
+
+.timeline{position:relative;padding-left:40px}
+.timeline::before{content:"";position:absolute;left:15px;top:14px;bottom:28px;width:1px;background:var(--hair)}
+.tl-item{position:relative;display:block;width:100%;text-align:left;padding:14px 4px 18px 0;min-height:var(--tap)}
+.tl-item:active{opacity:.62}
+.tl-node{position:absolute;left:-40px;top:14px;width:31px;height:31px;border-radius:50%;
+  display:grid;place-items:center;background:var(--bg-2);border:1px solid var(--hair);
+  font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tl-item.done .tl-node{background:var(--gold);border-color:var(--gold);color:#0B3D2E}
+.tl-item.done .tl-node svg{width:15px;height:15px}
+.tl-phase{display:block;font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted-2)}
+.tl-title{display:block;font-size:17.5px;margin-top:2px;letter-spacing:-.02em}
+.tl-meta{display:block;font-size:13.5px;color:var(--muted);margin-top:4px}
+.tl-item.done .tl-title{color:var(--muted)}
+
+.sheet{position:fixed;inset:0;z-index:70;max-width:var(--maxw);margin:0 auto;background:var(--bg);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(100%);
+  transition:transform .3s cubic-bezier(.32,.72,0,1);visibility:hidden}
+.sheet.open{transform:translateX(0);visibility:visible}
+.sheet-head{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top)) 12px 10px;background:rgba(11,61,46,.9);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--hair)}
+.sheet-head h2{font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-body{padding:0 16px 140px}
+.lesson-hero{padding:20px 0 6px}
+.lesson-kicker{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold)}
+.lesson-h1{font-size:28px;letter-spacing:-.035em;margin-top:6px}
+.lesson-goal{color:var(--muted);font-size:15px;margin-top:9px}
+
+.theory{list-style:none;margin:0;padding:0;counter-reset:th}
+.theory li{counter-increment:th;position:relative;padding:12px 0 12px 34px;
+  border-bottom:1px solid var(--hair);font-size:15.5px}
+.theory li:last-child{border-bottom:0}
+.theory li::before{content:counter(th);position:absolute;left:0;top:13px;width:21px;height:21px;
+  border-radius:50%;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center;font-size:11.5px}
+
+.idx{margin-top:16px;border:1px solid var(--hair);border-radius:var(--radius);overflow:hidden}
+.idx summary{min-height:var(--tap);display:flex;align-items:center;gap:9px;padding:0 14px;
+  font-size:14.5px;color:var(--gold);cursor:pointer;list-style:none}
+.idx summary::-webkit-details-marker{display:none}
+.idx summary::after{content:"▾";margin-left:auto;transition:transform .2s;font-size:12px}
+.idx[open] summary::after{transform:rotate(180deg)}
+.idx-body{padding:2px 8px 8px}
+.idx-h{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);
+  padding:10px 6px 4px}
+.idx-i{display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;
+  min-height:42px;padding:7px 6px;border-radius:8px;font-size:14.5px;color:var(--text)}
+.idx-i:active{background:rgba(255,255,255,.06)}
+.idx-i i{font-style:normal;color:var(--muted-2);font-size:12px;min-width:20px;
+  font-variant-numeric:tabular-nums}
+.idx-i span{flex:1}
+.idx-i em{font-style:normal;color:var(--muted-2);font-size:11.5px;white-space:nowrap}
+.drill{padding:18px 0;border-top:1px solid var(--hair);scroll-margin-top:64px}
+.drill-top{display:flex;align-items:baseline;gap:10px}
+.drill-name{font-size:17px;letter-spacing:-.02em;flex:1}
+.drill-reps{font-size:11.5px;color:var(--gold);white-space:nowrap;background:var(--gold-soft);
+  padding:3px 9px;border-radius:99px;font-variant-numeric:tabular-nums}
+.drill-cue{font-size:14.5px;color:rgba(244,247,245,.80);margin-top:8px;padding-left:12px;
+  border-left:2px solid var(--hair)}
+.drill-cue b{color:var(--gold);font-weight:500}
+.mistakes{list-style:none;margin:0;padding:0}
+.mistakes li{display:flex;gap:10px;padding:10px 0;font-size:15px;border-bottom:1px solid var(--hair);
+  color:rgba(244,247,245,.86)}
+.mistakes li:last-child{border-bottom:0}
+.mistakes li::before{content:"✕";color:var(--red);font-size:13px;line-height:1.75;flex:none}
+
+/* --- animaciones --- */
+.animwrap{margin-top:14px}
+.animbox{--spd:1;background:linear-gradient(180deg,#0d4535 0%,#0a3b2d 100%);
+  border:1px solid var(--hair);border-radius:var(--radius);overflow:hidden}
+.animbox svg{display:block;width:100%;height:auto}
+.animctl{display:flex;align-items:center;gap:8px;margin-top:8px}
+.ictl{min-height:38px;padding:0 13px;border-radius:99px;border:1px solid var(--hair);
+  font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.ictl:active{background:rgba(255,255,255,.07)}
+.ictl[data-spd]{font-variant-numeric:tabular-nums;min-width:52px;justify-content:center}
+.animlabel{font-size:12px;color:var(--muted-2);flex:1;text-align:right;line-height:1.3}
+.animbox text{font-family:inherit;letter-spacing:.03em}
+.animbox .ov-g{fill:var(--gold);font-size:11px;font-weight:600}
+.animbox .ov-t{fill:rgba(244,247,245,.62);font-size:10.5px}
+
+/* --- verificación por ejercicio --- */
+.dcheck{margin-top:12px;border:1px solid var(--hair);border-radius:var(--radius);
+  padding:12px;background:rgba(0,0,0,.14)}
+.dcheck-h{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gold);
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.dcheck-h svg{width:15px;height:15px}
+.dcheck-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.strip{display:flex;gap:6px;margin-top:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.strip img{height:74px;width:auto;border-radius:8px;border:1px solid var(--hair);flex:none;background:#000}
+.verdict{display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:12px;
+  margin-top:10px;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.verdict.v-ok{background:rgba(95,191,143,.16);color:#8FE0B6}
+.verdict.v-mid{background:var(--gold-soft);color:var(--gold)}
+.verdict.v-bad{background:rgba(224,103,91,.16);color:#F3A79D}
+.verdict .vdot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+
+.fb-sec{background:rgba(244,247,245,.055);border-radius:var(--radius);padding:14px 15px;
+  margin-top:10px;border-left:2px solid var(--hair)}
+.fb-sec.ok{border-left-color:var(--green)}
+.fb-sec.warn{border-left-color:var(--red)}
+.fb-sec.fix{border-left-color:var(--gold)}
+.fb-sec.info{border-left-color:rgba(244,247,245,.35)}
+.fb-sec h4{font-size:13px;letter-spacing:.04em;margin-bottom:7px}
+.fb-sec.ok h4{color:#7ED6A8}.fb-sec.warn h4{color:#F09A90}
+.fb-sec.fix h4{color:var(--gold)}.fb-sec.info h4{color:var(--muted)}
+.fb-sec .body{font-size:14.5px;color:rgba(244,247,245,.88)}
+.fb-sec .body ul{margin:6px 0 0;padding-left:17px}
+.fb-sec .body li{margin-bottom:5px}
+.fb-sec .body p+p{margin-top:7px}
+.fb-sec .body b{color:var(--text);font-weight:600}
+
+/* --- chat --- */
+.fab{position:fixed;z-index:75;right:calc(50% - min(50vw,var(--maxw)/2) + 16px);
+  bottom:calc(22px + env(safe-area-inset-bottom));min-height:52px;padding:0 20px 0 16px;
+  display:flex;align-items:center;gap:9px;background:var(--gold);color:#0B3D2E;border-radius:99px;
+  font-weight:600;font-size:14.5px;box-shadow:0 8px 26px rgba(0,0,0,.42);
+  visibility:hidden;opacity:0;transform:translateY(12px);
+  transition:opacity .22s,transform .22s,visibility .22s}
+.fab.show{visibility:visible;opacity:1;transform:translateY(0)}
+.fab:active{transform:scale(.96)}
+.fab svg{width:19px;height:19px}
+.chat{position:fixed;left:0;right:0;bottom:0;z-index:90;max-width:var(--maxw);margin:0 auto;
+  height:88dvh;display:flex;flex-direction:column;background:var(--bg-2);border-radius:20px 20px 0 0;
+  border-top:1px solid var(--hair);box-shadow:0 -18px 44px rgba(0,0,0,.5);transform:translateY(102%);
+  transition:transform .32s cubic-bezier(.32,.72,0,1);visibility:hidden}
+.chat.open{transform:translateY(0);visibility:visible}
+.chat-grab{width:38px;height:4px;border-radius:99px;background:var(--hair);margin:9px auto 2px}
+.chat-head{display:flex;align-items:center;gap:10px;padding:6px 14px 12px;border-bottom:1px solid var(--hair)}
+.chat-head .ch-t{flex:1;min-width:0}
+.chat-head h3{font-size:15.5px}
+.chat-head p{font-size:11.5px;color:var(--muted-2);letter-spacing:.05em;text-transform:uppercase}
+.chat-log{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px}
+.msg{margin-bottom:14px;font-size:15px}
+.msg.u{display:flex;justify-content:flex-end}
+.msg.u div{background:var(--gold);color:#0B3D2E;padding:9px 14px;border-radius:16px 16px 4px 16px;
+  max-width:84%;white-space:pre-wrap;word-break:break-word}
+.msg.a div{background:rgba(244,247,245,.07);border-left:2px solid var(--gold);padding:11px 14px;
+  border-radius:0 12px 12px 0;color:rgba(244,247,245,.93)}
+.msg.a div b{color:var(--gold);font-weight:600}
+.msg.a div ul{margin:7px 0 0;padding-left:18px}
+.msg.a div li{margin-bottom:4px}
+.msg.a div p+p{margin-top:8px}
+.chat-foot{display:flex;gap:9px;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--hair)}
+.chat-foot textarea{flex:1;background:rgba(0,0,0,.22);border:1px solid var(--hair);border-radius:20px;
+  padding:11px 14px;resize:none;max-height:110px;font-size:16px;line-height:1.4}
+.chat-foot textarea:focus{outline:none;border-color:rgba(201,168,76,.55)}
+.send{width:var(--tap);height:var(--tap);min-width:var(--tap);border-radius:50%;background:var(--gold);
+  color:#0B3D2E;display:grid;place-items:center}
+.send svg{width:20px;height:20px}
+.send[disabled]{opacity:.4}
+.typing{display:flex;gap:4px;padding:4px 0}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.16s}
+.typing i:nth-child(3){animation-delay:.32s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* --- analizador --- */
+.upload{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;width:100%;
+  min-height:150px;border:1px dashed rgba(201,168,76,.45);border-radius:var(--radius);
+  background:var(--gold-soft);color:var(--gold);padding:18px;text-align:center}
+.upload:active{filter:brightness(1.15)}
+.upload svg{width:28px;height:28px}
+.upload b{font-size:15.5px;font-weight:600}
+.upload span{font-size:12.5px;color:var(--muted);max-width:250px;line-height:1.45}
+.ta{width:100%;min-height:170px;resize:vertical;background:rgba(0,0,0,.22);border:1px solid var(--hair);
+  border-radius:var(--radius);padding:13px 14px;font-size:15px;line-height:1.55}
+.ta:focus{outline:none;border-color:rgba(201,168,76,.55)}
+
+/* --- progreso --- */
+.ring-wrap{display:flex;align-items:center;gap:20px;padding:6px 0 4px}
+.ring{width:108px;height:108px;flex:none}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ring .bgc{stroke:rgba(244,247,245,.10)}
+.ring .fgc{stroke:var(--gold);transition:stroke-dashoffset .7s cubic-bezier(.2,.7,.2,1)}
+.ring-num{font-size:25px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.ring-lab{font-size:13.5px;color:var(--muted);margin-top:2px}
+.pg-row{display:flex;align-items:center;gap:13px;min-height:var(--tap);padding:11px 0;
+  border-bottom:1px solid var(--hair);width:100%;text-align:left}
+.pg-check{width:25px;height:25px;flex:none;border-radius:50%;border:1px solid var(--hair);
+  display:grid;place-items:center}
+.pg-row.done .pg-check{background:var(--gold);border-color:var(--gold)}
+.pg-row.done .pg-check svg{width:13px;height:13px;color:#0B3D2E}
+.pg-name{flex:1;font-size:15.5px}
+.pg-row.done .pg-name{color:var(--muted)}
+.pg-n{font-size:12px;color:var(--muted-2);font-variant-numeric:tabular-nums}
+
+/* --- modal --- */
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,.55);opacity:0;visibility:hidden;transition:opacity .24s,visibility .24s}
+.modal.open{opacity:1;visibility:visible}
+.modal-card{width:100%;max-width:var(--maxw);background:var(--bg-2);border-radius:20px 20px 0 0;
+  border-top:1px solid var(--hair);padding:18px 16px calc(20px + env(safe-area-inset-bottom));
+  transform:translateY(20px);transition:transform .28s cubic-bezier(.32,.72,0,1);
+  max-height:92dvh;overflow-y:auto}
+.modal.open .modal-card{transform:translateY(0)}
+.field{margin-top:14px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+.field input{width:100%;min-height:var(--tap);background:rgba(0,0,0,.24);border:1px solid var(--hair);
+  border-radius:12px;padding:0 14px;font-size:16px}
+.field input:focus{outline:none;border-color:rgba(201,168,76,.55)}
+.field small{display:block;font-size:12px;color:var(--muted-2);margin-top:6px;line-height:1.45}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (prefers-reduced-motion:reduce){
+  .sheet,.chat,.modal-card,.fab{transition:none !important}
+  .typing i{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="9" r="6.2" stroke="#C9A84C" stroke-width="2"/>
+        <circle cx="13.6" cy="7.4" r="1" fill="#C9A84C"/><circle cx="18" cy="7.4" r="1" fill="#C9A84C"/>
+        <circle cx="15.8" cy="11" r="1" fill="#C9A84C"/>
+        <path d="M16 15.2V27" stroke="#F4F7F5" stroke-width="2" stroke-linecap="round"/>
+        <path d="M11 27h10" stroke="#F4F7F5" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div><div class="brand-name">Caddie</div><div class="brand-sub">Entrenador de swing</div></div>
+    </div>
+    <button class="icon-btn" id="btnSettings" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+  <main id="view"></main>
+  <nav class="tabbar" role="tablist">
+    <button class="tab" role="tab" data-tab="curso" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Curso</span></button>
+    <button class="tab" role="tab" data-tab="analizador" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+      <span>Analizador</span></button>
+    <button class="tab" role="tab" data-tab="coach" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg>
+      <span>Coach</span></button>
+    <button class="tab" role="tab" data-tab="progreso" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      <span>Progreso</span></button>
+  </nav>
+</div>
+
+<section class="sheet" id="lessonSheet" aria-hidden="true">
+  <div class="sheet-head">
+    <button class="icon-btn" id="btnBack" aria-label="Volver" style="margin-left:-6px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <h2 id="sheetTitle">Lección</h2>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</section>
+
+<button class="fab" id="fab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg>
+  Pregunta al coach
+</button>
+
+<section class="chat" id="chat" aria-hidden="true">
+  <div class="chat-grab"></div>
+  <div class="chat-head">
+    <div class="ch-t"><h3 id="chatTitle">Coach</h3><p id="chatCtx">Contexto general</p></div>
+    <button class="icon-btn" id="chatClear" aria-label="Borrar conversación">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    <button class="icon-btn" id="chatClose" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="chat-log" id="chatLog"></div>
+  <div class="chat-foot">
+    <label class="sr" for="chatInput">Mensaje</label>
+    <textarea id="chatInput" rows="1" placeholder="Describe qué sientes o qué falla…"></textarea>
+    <button class="send" id="chatSend" aria-label="Enviar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg></button>
+  </div>
+</section>
+
+<div class="modal" id="settings" aria-hidden="true">
+  <div class="modal-card">
+    <div style="display:flex;align-items:center;gap:10px">
+      <h3 style="flex:1;font-size:19px">Ajustes</h3>
+      <button class="icon-btn" id="setClose" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="field">
+      <label for="inKey">Clave API de Anthropic</label>
+      <input id="inKey" type="password" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…">
+      <small>Se guarda solo en este iPhone (localStorage) y se envía únicamente a api.anthropic.com.</small>
+    </div>
+    <div class="field">
+      <label for="inModel">Modelo</label>
+      <input id="inModel" type="text" autocapitalize="off" spellcheck="false" placeholder="claude-sonnet-4-6">
+    </div>
+    <div class="field">
+      <label for="inHand">Mano dominante</label>
+      <input id="inHand" type="text" list="handList" placeholder="diestro">
+      <datalist id="handList"><option value="diestro"><option value="zurdo"></datalist>
+      <small>Ajusta las referencias del coach y refleja las animaciones.</small>
+    </div>
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn" id="setSave">Guardar</button>
+      <button class="btn btn-ghost" id="setReset">Reiniciar progreso y conversaciones</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileCam" accept="video/*" capture="environment" class="sr">
+<input type="file" id="fileLib" accept="video/*" class="sr">
+<canvas id="grabCanvas" class="sr"></canvas>
+
+<script>
+"use strict";
+/* ============ CONFIG ============ */
+const API_KEY_DEFAULT = "";
+const MODEL_DEFAULT   = "claude-sonnet-4-6";
+const API_URL         = "https://api.anthropic.com/v1/messages";
+const API_VERSION     = "2023-06-01";
+const FRAMES_PER_CLIP = 5;
+
+/* ============ CURSO ============ */
+const LESSONS = [
+{
+  id:1, phase:"Fundamento", title:"Grip y conexión",
+  goal:"La única parte del cuerpo que toca el palo. Si el grip varía, la cara varía, y ningún arreglo posterior aguanta.",
+  theory:[
+    "Presión 4 sobre 10: suficiente para controlar el palo, no para estrangularlo. Un grip de 8 bloquea la bisagra de muñeca y te roba velocidad.",
+    "Las «V» que forman pulgar e índice de cada mano apuntan entre la barbilla y el hombro derecho (diestro). Ahí está tu referencia de cara cuadrada.",
+    "El palo descansa en la base de los dedos de la mano de abajo, nunca en la palma. En la palma pierdes la articulación y la sensación de la cabeza del palo."
+  ],
+  drills_no_ball:[
+    {name:"Escalera de presión", reps:"3 × 30 s", animation:"grip_pressure",
+     cue:"Aprieta hasta 8, mantén 2 segundos y **suelta hasta 4**. Repite. Lo que entrenas es la diferencia, no el número.",
+     check:"Los nudillos no se marcan en blanco al soltar; los antebrazos se ven relajados, sin tendones marcados; el palo no se mueve al cambiar de presión"},
+    {name:"Chequeo de las V a ciegas", reps:"3 × 10 montajes", animation:"grip_vs",
+     cue:"Monta el grip con los ojos cerrados, ábrelos y comprueba las V en el espejo. **Si falla, deshaz y repite**: no lo corrijas girando las manos.",
+     check:"Ambas V apuntan entre barbilla y hombro trasero; se ven 2 o 3 nudillos de la mano de arriba; las manos se tocan, sin hueco entre ellas"},
+    {name:"Palo en los dedos", reps:"2 × 20 s por mano", animation:"grip_fingers",
+     cue:"Apoya el palo en la base de los dedos con la mano abierta, **luego cierra**. Si lo montas con la mano ya cerrada, acaba en la palma.",
+     check:"El grip cruza la base de los dedos, no el centro de la palma; la mano se cierra después de apoyar; el meñique conserva contacto"},
+    {name:"Montaje en dos tiempos", reps:"3 × 12 montajes", animation:"grip_fingers",
+     cue:"Coloca primero la mano de arriba y **compruébala**. Solo entonces añade la de abajo. Nunca las dos a la vez.",
+     check:"La mano de arriba se coloca y se verifica antes de añadir la de abajo; las dos V quedan paralelas entre sí"},
+    {name:"Línea marcada en el guante", reps:"2 × 15 montajes", animation:"grip_vs",
+     cue:"Dibuja una raya en el guante entre pulgar e índice. **Debe apuntar al hombro de atrás** en los 15 montajes.",
+     check:"La raya del guante apunta al hombro trasero; la posición se repite igual en todos los montajes"},
+    {name:"Enganche Vardon y meñique", reps:"3 × 10 reps", animation:"grip_pressure",
+     cue:"Comprueba que el meñique de la mano de abajo **se apoya sobre el índice de arriba**. Sin hueco entre las manos.",
+     check:"El meñique descansa sobre el índice de la mano de arriba; no hay separación visible entre las dos manos"},
+    {name:"Balanceo pendular con presión 2", reps:"3 × 20 s", animation:"nine_to_three",
+     cue:"Balancea el palo como un péndulo con presión 2 de 10. **Si se te escapa, estás en 1**; si no oscila, estás en 5.",
+     check:"El palo oscila libre sin tensión en antebrazos; la cabeza del palo marca el ritmo, no las manos"},
+    {name:"Recolocar sin mover la mano de arriba", reps:"2 × 10 reps", animation:"grip_fingers",
+     cue:"Monta el grip, suelta la mano de abajo y vuelve a montarla **sin que la de arriba se mueva un grado**.",
+     check:"La mano de arriba permanece inmóvil al recolocar la de abajo; el palo no gira en el proceso"},
+    {name:"Grip con la cara apoyada en un marco", reps:"3 × 12 reps", animation:"grip_vs",
+     cue:"Apoya la cara del palo contra el canto de una puerta para forzarla cuadrada. **Monta el grip desde ahí.**",
+     check:"La cara está cuadrada antes de montar las manos; las V no corrigen la posición de la cara"}
+  ],
+  drills_with_ball:[
+    {name:"Chip a una mano (mano de abajo)", reps:"10 bolas", animation:"one_hand_chip",
+     cue:"Solo la mano derecha, chips de 15 metros. **Sentirás la cara del palo** porque no hay brazo izquierdo que la disimule.",
+     check:"El brazo libre no interviene; la muñeca no se rompe hacia atrás tras el impacto; el contacto es bola-primero"},
+    {name:"9 a 3 con presión 4", reps:"15 bolas, hierro 9", animation:"nine_to_three",
+     cue:"Swing de las 9 a las 3 en punto. Si al final el grip está más apretado que al principio, **has perdido el drill**.",
+     check:"El palo no pasa de la altura de los hombros en ninguna dirección; los brazos y el cuerpo giran juntos; el finish es simétrico a la subida"},
+    {name:"Chip a una mano, mano de arriba", reps:"10 bolas", animation:"one_hand_chip",
+     cue:"Ahora solo la mano izquierda (diestro). **Si la cara se abre, tu grip de arriba es débil.**",
+     check:"La muñeca de arriba no se arquea hacia atrás; la cara llega cuadrada; el contacto es bola-primero"},
+    {name:"Diez golpes, grip montado de cero", reps:"10 bolas, hierro 8", animation:"grip_vs",
+     cue:"Entre golpe y golpe **suelta el palo del todo** y vuelve a montarlo desde cero. Sin retoques.",
+     check:"El grip se monta completo cada golpe; las V quedan en la misma posición en los diez"},
+    {name:"Pitch de 40 m con presión constante", reps:"12 bolas, wedge", animation:"nine_to_three",
+     cue:"Mismo swing en todos. El foco es que la presión **no suba en la transición**.",
+     check:"Los antebrazos siguen relajados arriba; no hay tirón brusco desde la transición"},
+    {name:"Bola desde tee alto con hierro medio", reps:"10 bolas", animation:"grip_pressure",
+     cue:"Tee alto exagera el barrido. **Con grip tenso harás topped**; con presión 4 el palo barre solo.",
+     check:"El contacto es limpio, sin tops ni golpes gordos; las manos no se agarrotan antes del impacto"}
+  ],
+  common_mistakes:[
+    "Grip demasiado fuerte: mata la bisagra de muñeca y aparece el casting en la bajada.",
+    "Grip en la palma en lugar de los dedos: cara inestable y pérdida de velocidad.",
+    "Manos separadas, sin que funcionen como una unidad: cada mano compite por el control.",
+    "Reposicionar las manos en el setup cada golpe: la cara llega distinta cada vez."
+  ],
+  coach_context:"Foco en fundamentos de grip: presión, orientación de las V, palo en dedos y unidad de las manos. El alumno lleva años jugando, así que lo más probable es que tenga un grip fuerte o débil consolidado y que cualquier cambio le resulte raro durante 2-3 semanas."
+},
+{
+  id:2, phase:"Fundamento", title:"Stance y postura",
+  goal:"Un setup repetible es lo que permite que el swing sea repetible. La mayoría de errores «de swing» nacen antes de mover el palo.",
+  theory:[
+    "Ancho de pies: hombros con hierros medios, un poco más ancho con driver, más estrecho en wedges. Más ancho no es más estable: te impide girar.",
+    "Postura desde la bisagra de cadera, no desde la espalda. Empuja los glúteos hacia atrás, columna larga, rodillas apenas flexionadas.",
+    "Alineación: pies, caderas y hombros paralelos a la línea objetivo, no apuntando a bandera. Es la causa número uno de ajustes compensatorios."
+  ],
+  drills_no_ball:[
+    {name:"Bisagra de cadera contra la pared", reps:"3 × 10 reps", animation:"posture_hinge",
+     cue:"De espaldas a una pared, a un palmo. **Empuja los glúteos hasta tocarla** mientras el pecho baja. Eso es bisagra de cadera, no doblar la espalda.",
+     check:"La espalda se mantiene recta, sin joroba lumbar ni dorsal; el movimiento nace de la cadera; las rodillas apenas se flexionan"},
+    {name:"Ancho con referencia de hombros", reps:"3 × 8 setups", animation:"stance_width",
+     cue:"Monta el stance mirando que la **parte exterior de cada pie caiga bajo el hombro**. Con driver, un pie más por fuera.",
+     check:"El exterior de cada pie cae bajo el hombro correspondiente; el peso está en el centro del pie, no en talones ni puntas"},
+    {name:"Carriles de alineación", reps:"5 min", animation:"alignment_rails",
+     cue:"Dos varillas: una en la línea de pies, otra en la línea de bola. **Los pies van paralelos**, no apuntando a bandera.",
+     check:"Pies, caderas y hombros paralelos a la varilla; los hombros no están abiertos ni cerrados respecto a los pies"},
+    {name:"Palo en tres puntos de la columna", reps:"3 × 10 reps", animation:"posture_hinge",
+     cue:"Un palo vertical tocando cabeza, dorsal y sacro. **Bisagra sin que se despegue ninguno de los tres.**",
+     check:"Los tres puntos de contacto se mantienen durante la bisagra; no aparece joroba dorsal ni arco lumbar exagerado"},
+    {name:"Equilibrio en tres zonas del pie", reps:"3 × 30 s", animation:"stance_width",
+     cue:"En postura, lleva el peso a talones, luego a puntas y **párate en el centro del pie**. Ahí se juega.",
+     check:"El peso acaba en el centro del pie; las rodillas ni se bloquean ni se flexionan en exceso"},
+    {name:"Setup cronometrado", reps:"10 repeticiones", animation:"alignment_rails",
+     cue:"Monta el setup completo **siempre en el mismo tiempo**. Cronométralo de verdad y compara.",
+     check:"El tiempo varía menos de dos segundos entre repeticiones; la secuencia de pasos no cambia"},
+    {name:"Brazos colgando por gravedad", reps:"3 × 10 reps", animation:"setup_check",
+     cue:"En postura, deja caer los brazos sin tensión. **Donde cuelgan, ahí van las manos.** No los estires ni los pegues.",
+     check:"Los brazos cuelgan bajo los hombros, sin tensión; hay aproximadamente un palmo entre el grip y el muslo"},
+    {name:"Inclinación de columna con driver", reps:"3 × 8 reps", animation:"setup_check",
+     cue:"Con driver, **hombro de atrás más bajo** y columna inclinada lejos del objetivo. Memoriza esa diferencia.",
+     check:"El hombro trasero queda por debajo del delantero; la cabeza está detrás de la bola"},
+    {name:"Rodillas: flexión mínima útil", reps:"3 × 12 reps", animation:"posture_hinge",
+     cue:"Exagera: rodillas rectas, luego sentadilla, luego **la flexión mínima que te deja girar**. Esa es la tuya.",
+     check:"Las rodillas quedan desbloqueadas pero no en sentadilla; las tibias están casi verticales"},
+    {name:"Perfil en el espejo", reps:"3 × 10 setups", animation:"posture_profile",
+     cue:"De perfil ante el espejo: **hombros sobre las puntas de los pies**, brazos colgando, barbilla fuera del pecho. Tres referencias, una mirada.",
+     check:"Los hombros caen sobre la vertical de las puntas; las manos cuelgan bajo los hombros; la espalda está recta"},
+    {name:"Silla fantasma: bisagra, no sentadilla", reps:"3 × 15 reps", animation:"posture_hinge",
+     cue:"Una silla justo detrás. Toca el borde con los glúteos **sin sentarte y sin flexionar más las rodillas**. Eso separa bisagra de sentadilla.",
+     check:"Los glúteos llegan atrás con las rodillas casi quietas; el pecho baja al mismo tiempo; no hay sentadilla"},
+    {name:"Bisagra con banda en la cadera", reps:"3 × 12 reps", animation:"posture_hinge",
+     cue:"Una banda elástica rodeando la cadera, anclada delante y tirando hacia atrás. **Deja que la banda te enseñe el gesto.**",
+     check:"El movimiento nace de la cadera empujando atrás; la columna se mantiene larga; las rodillas apenas se mueven"},
+    {name:"Un puño entre barbilla y pecho", reps:"3 × 10 reps de 20 s", animation:"setup_check",
+     cue:"Comprueba que cabe un puño entre barbilla y pecho. **Si la barbilla toca, el hombro no podrá pasar por debajo** en la subida.",
+     check:"Hay un hueco de un puño bajo la barbilla; la mirada cae sobre la bola sin hundir el cuello"},
+    {name:"Subir y bajar de la postura a ciegas", reps:"3 × 12 reps", animation:"posture_hinge",
+     cue:"De pie a postura y vuelta, doce veces seguidas **con los ojos cerrados**. Estás construyendo memoria propioceptiva, no mirando.",
+     check:"La postura final es la misma en todas las repeticiones; no hay corrección al abrir los ojos"},
+    {name:"Postura descalzo, tres apoyos", reps:"3 × 60 s", animation:"stance_width",
+     cue:"Sin zapatos. Siente los tres puntos: **talón, base del dedo gordo y base del meñique**. El peso reparte entre los tres.",
+     check:"Los tres puntos de apoyo soportan peso; no hay dedos agarrados al suelo ni peso en talones"},
+    {name:"Postura con los ojos cerrados", reps:"3 × 30 s", animation:"setup_check",
+     cue:"Monta la postura, cierra los ojos y aguanta medio minuto. **Nota hacia dónde se te va el peso.** Ahí está tu tendencia.",
+     check:"El peso permanece en el centro del pie durante los 30 segundos; no hay balanceo creciente"},
+    {name:"Ángulo de columna constante", reps:"3 × 12 reps", animation:"spine_angle",
+     cue:"Sube y baja a cámara lenta **sin cambiar la inclinación del tronco**. Un palo en el suelo apuntando a tu esternón te lo delata.",
+     check:"La inclinación del tronco se mantiene durante todo el giro; la cabeza no sube ni baja"},
+    {name:"Libro abierto: movilidad torácica", reps:"2 × 10 por lado", animation:"chest_turn_posture",
+     cue:"Tumbado de lado, rodillas flexionadas, abre el brazo de arriba como un libro. **Sin movilidad torácica no hay giro sin perder postura.**",
+     check:"El giro viene del tórax, no de la zona lumbar; las rodillas permanecen juntas en el suelo"},
+    {name:"Estiramiento de isquiotibiales", reps:"3 × 30 s por pierna", animation:"posture_hinge",
+     cue:"Isquios cortos te obligan a encorvar la espalda para llegar a la bola. **Dos minutos al día cambian tu postura en seis semanas.**",
+     check:"El estiramiento se nota en la parte posterior del muslo; la espalda se mantiene recta durante el estiramiento"},
+    {name:"Plancha con rotación", reps:"3 × 8 por lado", animation:"chest_turn_posture",
+     cue:"El core es lo que te sostiene la inclinación durante el swing. **Si se cansa, te levantas en la bajada.**",
+     check:"La cadera no cae ni se eleva al rotar; el movimiento es controlado, no por inercia"},
+    {name:"Vídeo de perfil con el móvil", reps:"1 × 5 min por sesión", animation:"posture_profile",
+     cue:"Apoya el móvil en el bolso, a la altura de la cadera y de perfil. **Graba tu setup y compáralo con el del mes pasado.**",
+     check:"La cámara está a la altura de la cadera y perpendicular a la línea de pies; se ve el cuerpo entero"}
+  ],
+  drills_with_ball:[
+    {name:"Escalera de posición de bola", reps:"12 bolas, hierro 7", animation:"ball_position",
+     cue:"Golpea 4 bolas centradas, 4 un palmo adelante, 4 un palmo atrás. **Aprende a leer la marca en el suelo**, no solo el vuelo.",
+     check:"La posición de bola cambia de verdad entre series; el stance y la postura se mantienen iguales; la marca en el suelo se desplaza con la bola"},
+    {name:"Tres anchos, el mismo palo", reps:"12 bolas, hierro 7", animation:"stance_width",
+     cue:"Cuatro bolas con stance estrecho, cuatro normal, cuatro ancho. **Compara contacto y equilibrio**, no distancia.",
+     check:"El ancho cambia de verdad entre series; el mejor contacto y equilibrio aparecen en el ancho de hombros"},
+    {name:"Varilla en los pies, 15 golpes", reps:"15 bolas, hierro 8", animation:"alignment_rails",
+     cue:"Varilla en la línea de pies durante toda la serie. **No la quites para el golpe.**",
+     check:"Los pies quedan paralelos a la varilla en todos los golpes; no hay recolocación furtiva antes de pegar"},
+    {name:"Ojos cerrados tras el setup", reps:"10 bolas, hierro 9", animation:"ball_position",
+     cue:"Monta el setup, cierra los ojos y pega. **Te dirá si tu postura es estable** sin referencia visual.",
+     check:"El equilibrio se mantiene durante todo el swing; el contacto sigue siendo sólido con los ojos cerrados"},
+    {name:"Golpes desde pendiente ascendente", reps:"10 bolas", animation:"setup_check",
+     cue:"En cuesta arriba, **hombros paralelos a la pendiente** y bola un poco adelante. Ajustas el setup, no el swing.",
+     check:"Los hombros siguen la inclinación del terreno; la bola está adelantada respecto a lo habitual"}
+  ],
+  common_mistakes:[
+    "Agacharse doblando la espalda en lugar de bisagrar desde la cadera: bloquea el giro y causa dolor lumbar.",
+    "Stance demasiado ancho creyendo que da estabilidad: en realidad impide la rotación de cadera.",
+    "Hombros apuntados a la derecha del objetivo (diestro) por alinearse a bandera con los ojos.",
+    "Peso en los talones: el cuerpo se levanta en la bajada para compensar."
+  ],
+  coach_context:"Foco en setup: ancho de stance, bisagra de cadera, equilibrio sobre el pie y alineación. En un jugador con años de práctica, un setup desalineado suele estar compensado por un patrón de swing; corregir el setup sin avisar puede empeorar los resultados durante unas sesiones."
+},
+{
+  id:3, phase:"Movimiento", title:"Takeaway: los primeros 50 cm",
+  goal:"El takeaway no genera velocidad, pero decide el plano. Un inicio torcido obliga a dos compensaciones más arriba.",
+  theory:[
+    "El triángulo brazos-hombros se mueve en bloque los primeros 50 cm. Las manos no hacen nada por su cuenta.",
+    "La cabeza del palo viaja ligeramente hacia dentro y hacia arriba, no en línea recta hacia atrás ni por fuera de las manos.",
+    "A la altura de la cadera, la puntera del palo apunta al cielo y el shaft es paralelo a la línea de pies. Es tu primer punto de control."
+  ],
+  drills_no_ball:[
+    {name:"Triángulo en bloque", reps:"3 × 12 reps", animation:"takeaway_triangle",
+     cue:"Una toalla doblada bajo ambas axilas. **Llévala hasta la cadera sin que se caiga**: obliga a mover el triángulo entero.",
+     check:"La toalla no se cae; el triángulo brazos-hombros conserva su forma; las muñecas no se rompen en los primeros 50 cm"},
+    {name:"Camino de la cabeza del palo", reps:"3 × 10 reps", animation:"takeaway_path",
+     cue:"Un headcover 15 cm por fuera y por detrás de la bola. **Pasa por dentro sin tocarlo** y para a la altura de la cadera a comprobar.",
+     check:"La cabeza del palo pasa por dentro del headcover; a la altura de la cadera el shaft queda paralelo a la línea de pies y la puntera apunta al cielo"},
+    {name:"Puntera al cielo a la altura de la cadera", reps:"3 × 12 reps", animation:"toe_up",
+     cue:"Para a la altura de la cadera y comprueba: **puntera al cielo, shaft paralelo a los pies**. Es tu primer punto de control.",
+     check:"A la altura de la cadera la puntera apunta al cielo; el shaft es paralelo a la línea de pies, no cruzado"},
+    {name:"Takeaway contra la pared", reps:"3 × 10 reps", animation:"takeaway_path",
+     cue:"De espaldas a una pared, a un palmo. **El palo no la toca** en los primeros 50 cm: si la golpea, sale por fuera.",
+     check:"La cabeza del palo no golpea la pared; el palo no se separa del cuerpo hacia fuera"},
+    {name:"Tres segundos para los primeros 50 cm", reps:"3 × 12 reps", animation:"takeaway_triangle",
+     cue:"Cuenta tres segundos completos para el tramo inicial. **Lentitud deliberada**, luego ritmo normal.",
+     check:"El tramo inicial dura claramente tres segundos; no hay aceleración brusca al salir de la bola"},
+    {name:"Palo atravesado entre los antebrazos", reps:"3 × 10 reps", animation:"takeaway_triangle",
+     cue:"Un palo corto cruzado entre los antebrazos. **Si se cae, las manos han trabajado por su cuenta.**",
+     check:"El palo intermedio no se cae; los antebrazos conservan la distancia entre sí durante el tramo inicial"},
+    {name:"Freno a las 8 en punto con reflejo", reps:"3 × 15 reps", animation:"toe_up",
+     cue:"Para a las 8 en punto y **comprueba tu reflejo en un cristal** antes de continuar. Corrige ahí, no arriba.",
+     check:"La posición a las 8 se repite igual; la cara del palo no está ni abierta ni cerrada respecto al arco"},
+    {name:"Moneda bajo la bola del pie trasero", reps:"3 × 12 reps", animation:"takeaway_path",
+     cue:"Una moneda bajo la parte delantera del pie trasero. **No debes aplastarla**: significaría que empujas lateralmente.",
+     check:"El peso no se desplaza hacia el exterior del pie trasero; el takeaway es rotacional"},
+    {name:"Takeaway sin perder la inclinación", reps:"3 × 12 reps", animation:"spine_angle",
+     cue:"Inicia el swing **sin que el tronco se enderece ni un grado**. Si te levantas aquí, ya no hay forma de volver.",
+     check:"La inclinación del tronco es la misma al salir de la bola que a la altura de la cadera; la cabeza no sube"},
+    {name:"Pecho girando, cabeza quieta", reps:"3 × 10 reps", animation:"chest_turn_posture",
+     cue:"Fija la vista en un punto del suelo. **El pecho gira por debajo de la cabeza**, no la arrastra.",
+     check:"La cabeza permanece sobre el mismo punto; el giro procede del tórax"}
+  ],
+  drills_with_ball:[
+    {name:"Takeaway lento, golpe normal", reps:"15 bolas, hierro 8", animation:"nine_to_three",
+     cue:"Primeros 50 cm al 20 % de velocidad, luego swing completo. **Separa el inicio del ritmo** del resto del swing.",
+     check:"Se nota un cambio claro de velocidad entre el inicio y el resto del swing; el takeaway lento no acorta la subida"},
+    {name:"Arranque ya desde la altura de la cadera", reps:"12 bolas, hierro 9", animation:"toe_up",
+     cue:"Empieza el swing **colocado ya a la altura de la cadera**, sin takeaway. Luego añade el tramo inicial y compara.",
+     check:"La posición de partida es la de control; el contacto no empeora al reincorporar el takeaway"},
+    {name:"Headcover fuera, serie completa", reps:"15 bolas, hierro 8", animation:"takeaway_path",
+     cue:"Headcover por fuera y detrás de la bola. **Golpea los 15 sin tocarlo.**",
+     check:"El headcover no se mueve en ningún golpe; la trayectoria no sale por fuera de la línea"},
+    {name:"Pausa de un segundo a la cadera", reps:"12 bolas", animation:"takeaway_triangle",
+     cue:"Sube, **para un segundo entero a la altura de la cadera**, y completa el swing sin perder ritmo.",
+     check:"La pausa es real y visible; el swing posterior conserva el ritmo y la amplitud"},
+    {name:"Takeaway con el palo del revés", reps:"10 bolas simuladas", animation:"toe_up",
+     cue:"Agarra el palo por la cabeza. El tramo inicial debe sentirse **ligero y sin esfuerzo de manos**.",
+     check:"No hay tirón de muñecas al iniciar; el movimiento nace del giro del torso"}
+  ],
+  common_mistakes:[
+    "Levantar el palo solo con las manos: la cabeza sale por fuera y el plano queda alto.",
+    "Rodar las muñecas muy pronto y abrir la cara en el primer tramo.",
+    "Llevar el palo demasiado por dentro y luego tener que levantarlo: el clásico «por dentro y por encima».",
+    "Mover la cabeza del palo recta hacia atrás más de 50 cm forzando el torso a bloquearse."
+  ],
+  coach_context:"Foco en el takeaway y el primer punto de control (shaft paralelo a la altura de la cadera, puntera al cielo). Errores de takeaway en jugadores experimentados suelen venir de buscar amplitud con las manos en vez de con el giro."
+},
+{
+  id:4, phase:"Movimiento", title:"Backswing: giro y plano",
+  goal:"Amplitud desde el giro del torso, no desde los brazos. Aquí se construye la energía que luego hay que entregar.",
+  theory:[
+    "Objetivo aproximado: 90° de hombros sobre 45° de caderas. Esa diferencia es el «X-factor», la tensión elástica que liberas en la bajada.",
+    "El set de muñecas ocurre de forma gradual hasta formar ~90° entre antebrazo y shaft al llegar arriba. No es un gesto puntual.",
+    "El plano de swing es el camino que recorre el palo. Arriba, el shaft debería apuntar aproximadamente a la línea de bola; por encima o por debajo son los dos errores de plano."
+  ],
+  drills_no_ball:[
+    {name:"Giro con palo en los hombros", reps:"3 × 12 reps", animation:"shoulder_turn",
+     cue:"Palo cruzado sobre los hombros en postura de golpe. **Gira hasta que el extremo apunte a la bola**, con la cadera girando la mitad.",
+     check:"Los hombros giran claramente más que las caderas; la cabeza se mantiene en su sitio; no hay balanceo lateral hacia el pie trasero"},
+    {name:"Set de muñecas a la altura de la cadera", reps:"3 × 10 reps", animation:"wrist_set",
+     cue:"Sube a la altura de la cadera y **forma el ángulo de 90° ahí**, antes de seguir. Mantenlo hasta arriba.",
+     check:"A la altura de la cadera el ángulo antebrazo-shaft es de unos 90°; el ángulo se conserva hasta el final de la subida"},
+    {name:"Trazado de plano", reps:"3 × 8 reps", animation:"swing_plane",
+     cue:"Swing a cámara lenta parando arriba. **Comprueba que el shaft apunta a la línea de bola**, ni a tus pies ni al otro lado.",
+     check:"Arriba, el shaft apunta aproximadamente a la línea de bola; las manos quedan sobre el hombro trasero, ni por fuera ni cruzadas"},
+    {name:"Posición arriba congelada", reps:"3 × 12 reps de 5 s", animation:"top_position",
+     cue:"Llega arriba y **aguanta cinco segundos**. Comprueba shaft, manos y hombro antes de deshacer.",
+     check:"El shaft apunta a la línea de bola; las manos quedan sobre el hombro trasero; la posición se aguanta sin temblar"},
+    {name:"Giro contra una silla", reps:"3 × 10 reps", animation:"shoulder_turn",
+     cue:"Una silla pegada a la cadera trasera. **Gira sin empujarla.** Eso es girar; empujarla es balancearse.",
+     check:"La cadera trasera no empuja la silla hacia atrás; el giro es rotacional, no lateral"},
+    {name:"Pies juntos, subida completa", reps:"3 × 12 reps", animation:"feet_together",
+     cue:"Con los pies juntos no puedes balancearte. **Si pierdes el equilibrio, te estabas moviendo lateralmente.**",
+     check:"No hay pérdida de equilibrio en la subida; la cabeza se mantiene centrada"},
+    {name:"Separación hombros-caderas asistida", reps:"3 × 10 reps", animation:"shoulder_turn",
+     cue:"Alguien te sujeta la cadera trasera. **Gira solo el torso** y siente el estiramiento en el costado.",
+     check:"Los hombros giran mientras la cadera queda frenada; se nota tensión elástica en el costado"},
+    {name:"Set de muñecas aislado", reps:"3 × 15 reps", animation:"wrist_set",
+     cue:"Brazos pegados al cuerpo, sin subirlos. **Solo las muñecas forman el ángulo.** Aísla el gesto.",
+     check:"Los brazos no suben; el ángulo se forma únicamente con las muñecas"},
+    {name:"Brazo de arriba estirado con banda", reps:"3 × 12 reps", animation:"top_position",
+     cue:"Una banda elástica alrededor de los brazos. **El brazo de arriba no se dobla** al llegar arriba.",
+     check:"El brazo de arriba conserva su extensión arriba; los brazos no se separan uno del otro"},
+    {name:"Subida en tres paradas", reps:"3 × 8 reps", animation:"half_swing",
+     cue:"Para a la cadera, para al pecho, para arriba. **Comprueba cada estación** antes de seguir.",
+     check:"Las tres paradas son visibles y distintas; la posición de cada estación se repite entre repeticiones"},
+    {name:"Giro completo sin enderezarse", reps:"3 × 12 reps", animation:"spine_angle",
+     cue:"Gira hasta arriba **manteniendo la misma inclinación de columna**. Enderezarse para girar más es trampa: pierdes el plano.",
+     check:"La inclinación del tronco arriba es la misma que en el setup; la cabeza no se eleva durante la subida"},
+    {name:"Hombro bajo la barbilla sin hundirse", reps:"3 × 10 reps", animation:"chest_turn_posture",
+     cue:"El hombro delantero pasa **por debajo de la barbilla**, no la empuja. Si la barbilla baja, tu postura inicial era corta.",
+     check:"El hombro delantero llega bajo la barbilla sin que esta se desplace; la altura de la cabeza se mantiene"}
+  ],
+  drills_with_ball:[
+    {name:"Backswing al 75 % de amplitud", reps:"15 bolas, hierro 7", animation:"swing_plane",
+     cue:"Para arriba a tres cuartos. **Casi siempre va más lejos que el swing completo** porque el contacto mejora.",
+     check:"La subida se detiene claramente antes del final; no hay colapso del brazo de arriba; el ritmo se mantiene"},
+    {name:"Ritmo 3:1 con metrónomo", reps:"12 bolas", animation:"tempo_metronome",
+     cue:"Tres tiempos de subida, uno de bajada. **No se trata de ir lento**, se trata de la proporción.",
+     check:"La subida dura visiblemente unas tres veces más que la bajada; no hay tirón brusco desde arriba"},
+    {name:"Pausa arriba de un segundo", reps:"12 bolas, hierro 7", animation:"top_position",
+     cue:"Para arriba **un segundo completo** antes de bajar. Mata la transición precipitada de raíz.",
+     check:"La pausa arriba es visible; el ángulo de muñecas se conserva durante la pausa"},
+    {name:"Medio swing con control de plano", reps:"15 bolas, hierro 8", animation:"half_swing",
+     cue:"Subida a tres cuartos **comprobando el shaft en cada golpe**. La amplitud debe repetirse.",
+     check:"La amplitud se repite entre golpes; el shaft no cruza al otro lado arriba"},
+    {name:"Pies juntos con bola", reps:"12 bolas, hierro 9", animation:"feet_together",
+     cue:"Pies juntos y swing al 70 %. **Cualquier balanceo lateral te hará fallar el contacto.**",
+     check:"Los pies siguen juntos al acabar; el contacto es bola-primero; no hay tambaleo"},
+    {name:"Subida con los ojos en el hombro", reps:"10 bolas", animation:"shoulder_turn",
+     cue:"Gira hasta que **tu hombro delantero quede bajo la barbilla**. Esa es tu señal de giro completo.",
+     check:"El hombro delantero llega bajo la barbilla; la cabeza no se desplaza para permitirlo"}
+  ],
+  common_mistakes:[
+    "Levantar los brazos sin girar el torso: se siente «largo» pero no hay energía almacenada.",
+    "Sobregirar la cadera buscando amplitud: pierdes el X-factor y la tensión elástica.",
+    "Set de muñecas inexistente o tardío: obliga a un casting desde arriba.",
+    "Shaft cruzado apuntando a la derecha del objetivo (diestro) arriba: plano por encima y golpe de fuera adentro casi garantizado."
+  ],
+  coach_context:"Foco en el backswing: separación hombros/caderas, set de muñecas progresivo y plano del shaft arriba. Con años de práctica, el error típico es confundir amplitud de brazos con giro de torso."
+},
+{
+  id:5, phase:"Movimiento", title:"Transición y bajada",
+  goal:"Aquí viven casi todos los errores crónicos. La secuencia correcta es la diferencia entre pegar con el cuerpo y pegar con las manos.",
+  theory:[
+    "Secuencia cinemática: caderas, torso, brazos, palo. En ese orden, y cada eslabón acelera y luego frena para pasar la energía al siguiente.",
+    "La transferencia de presión al pie delantero empieza mientras los brazos aún están subiendo. No es un gesto posterior, es un solape.",
+    "El casting (soltar el ángulo de muñecas desde arriba) es el síntoma, no la causa. La causa casi siempre es que los brazos arrancan antes que el suelo."
+  ],
+  drills_no_ball:[
+    {name:"Secuencia en cuatro tiempos", reps:"4 × 8 reps", animation:"transition_sequence",
+     cue:"Arriba, cuenta: **cadera – torso – brazos – palo**. Un tiempo por eslabón, a cámara lenta. Si algo se adelanta, reinicia.",
+     check:"La cadera inicia la bajada antes que el torso; los brazos no se adelantan al cuerpo; el palo es lo último en llegar"},
+    {name:"Paso adelante (step drill)", reps:"3 × 10 reps", animation:"weight_shift",
+     cue:"Empieza con los pies juntos, sube, y **da un paso al objetivo con el pie delantero mientras bajas**. Imposible castear así.",
+     check:"El paso ocurre mientras los brazos aún bajan, no después; el peso acaba claramente sobre el pie delantero; no se pierde el equilibrio"},
+    {name:"Bomba de transición", reps:"3 × 10 reps", animation:"pump_drill",
+     cue:"Sube arriba, **arranca la bajada con la cadera dos veces** sin pegar, y al tercer intento completa el swing.",
+     check:"Las dos bombas mueven la cadera sin que bajen los brazos; el ángulo de muñecas se conserva durante las bombas"},
+    {name:"Plantar el talón delantero", reps:"3 × 12 reps", animation:"weight_shift",
+     cue:"Arriba, **planta el talón delantero** para iniciar la bajada. Esa es tu señal de salida, no los brazos.",
+     check:"El talón delantero baja antes de que los brazos empiecen; la cadera gira al plantarlo"},
+    {name:"Apertura de cadera contra pared", reps:"3 × 10 reps", animation:"hip_clear",
+     cue:"Cadera delantera tocando una pared. **Rótala sin despegarla**: eso impide deslizar hacia el objetivo.",
+     check:"La cadera rota sin deslizarse lateralmente; el contacto con la pared se mantiene durante la bajada"},
+    {name:"Parada a media bajada", reps:"3 × 12 reps", animation:"pump_drill",
+     cue:"Baja hasta la altura de la cadera y **para**. El ángulo de muñeca debe seguir ahí, intacto.",
+     check:"A la altura de la cadera el ángulo de muñeca sigue cerrado; no hay casting"},
+    {name:"Palo invertido: dónde silba", reps:"3 × 20 swings", animation:"transition_sequence",
+     cue:"Agarra el palo por la cabeza y balancéalo. **El silbido debe oírse pasada la bola**, no antes.",
+     check:"El sonido del aire se produce después de la posición de la bola; no hay silbido en la transición"},
+    {name:"Swing con silla delante del pie trasero", reps:"3 × 10 reps", animation:"hip_clear",
+     cue:"Una silla justo delante del pie trasero. **Si la golpeas en la bajada, estás tirando el cuerpo hacia la bola.**",
+     check:"El cuerpo no se acerca a la bola en la bajada; la distancia a la silla se mantiene"},
+    {name:"Giro sentado en un taburete", reps:"3 × 12 reps", animation:"transition_sequence",
+     cue:"Sentado, brazos cruzados. **Gira el torso en la secuencia correcta** aislando el tren superior.",
+     check:"El torso rota sin ayuda de las piernas; la secuencia torso-brazos se mantiene"},
+    {name:"Bajar sin levantarse", reps:"3 × 12 reps", animation:"spine_angle",
+     cue:"La causa número uno de topped: el cuerpo se endereza en la bajada. **Siente que bajas hacia la bola, no que te levantas de ella.**",
+     check:"La inclinación del tronco se conserva desde arriba hasta el impacto; la cabeza no asciende en la bajada"},
+    {name:"Espalda contra la pared en la bajada", reps:"3 × 10 reps", animation:"posture_profile",
+     cue:"Con los glúteos rozando una pared, **mantén el contacto durante toda la bajada**. Si lo pierdes, te has acercado a la bola.",
+     check:"El contacto con la pared se mantiene en la bajada; la distancia a la bola no se reduce"}
+  ],
+  drills_with_ball:[
+    {name:"Pies juntos, swing al 70 %", reps:"15 bolas, hierro 8", animation:"low_point",
+     cue:"Pies juntos elimina el empuje lateral. **Si pierdes el equilibrio, estás tirando con los brazos**.",
+     check:"Los pies se mantienen juntos durante todo el swing; no hay tambaleo en el finish; el contacto sigue siendo bola-primero"},
+    {name:"Step drill con bola", reps:"12 bolas, hierro 8", animation:"weight_shift",
+     cue:"Pies juntos, sube, **da el paso al objetivo y pega**. El movimiento impone la secuencia correcta.",
+     check:"El paso ocurre durante la bajada, no antes; el peso acaba delante; el contacto es sólido"},
+    {name:"Dos bombas y pega", reps:"10 bolas", animation:"pump_drill",
+     cue:"Dos bombas de cadera arriba y al tercer intento **completas el golpe sin perder el ángulo**.",
+     check:"Las bombas mueven la cadera sin soltar el ángulo; el tercer swing conserva la secuencia"},
+    {name:"Talón delantero levantado hasta la transición", reps:"12 bolas, hierro 9", animation:"hip_clear",
+     cue:"Pie delantero apoyado solo en la punta. **Plántalo justo al empezar la bajada.** Te obliga a secuenciar.",
+     check:"El talón se planta al iniciar la bajada; la cadera se abre sin bloquearse"},
+    {name:"Pies juntos al 70 % con wedge", reps:"15 bolas", animation:"feet_together",
+     cue:"Elimina toda ayuda lateral. **Si el contacto se mantiene, la secuencia es tuya.**",
+     check:"El equilibrio aguanta todo el swing; el contacto es limpio sin empuje lateral"}
+  ],
+  common_mistakes:[
+    "Arrancar la bajada con hombros y brazos: trayectoria de fuera adentro y slice o pull.",
+    "Casting: el ángulo de muñecas se suelta a mitad de bajada y la velocidad llega antes de la bola.",
+    "Quedarse sobre el pie trasero: topped, gordos y pérdida de compresión.",
+    "Deslizar la cadera hacia el objetivo en lugar de rotarla: bloquea los brazos y provoca manazo compensatorio."
+  ],
+  coach_context:"Foco en la transición y la secuencia cinemática: inicio desde el suelo, transferencia de presión y conservación del ángulo de muñecas. Es la lección donde más errores arraigados aparecen en jugadores intermedios con años de práctica."
+},
+{
+  id:6, phase:"Entrega", title:"Impacto y punto bajo",
+  goal:"El impacto es el único momento que la bola percibe. Todo lo anterior solo existe para llegar aquí bien.",
+  theory:[
+    "Con hierros, las manos llegan por delante de la bola: shaft lean hacia el objetivo. Comprimes la bola contra el suelo y luego sacas la chuleta.",
+    "El punto bajo del arco está por delante de la bola con hierros, y por detrás con driver (que se golpea en ascenso).",
+    "La cadera delantera está abierta hacia el objetivo en el impacto, el pecho aún algo cerrado. El cuerpo sigue girando, no para."
+  ],
+  drills_no_ball:[
+    {name:"Posición de impacto estática", reps:"3 × 12 reps de 5 s", animation:"shaft_lean",
+     cue:"Monta la posición de impacto y **aguanta 5 segundos**: manos adelante, cadera abierta, peso delantero. Memoriza la tensión.",
+     check:"Las manos están por delante de la cabeza del palo; la cadera delantera está abierta hacia el objetivo; el peso está sobre el pie delantero"},
+    {name:"Arco con punto bajo adelantado", reps:"3 × 15 swings", animation:"low_point",
+     cue:"Swings sin bola sobre hierba. **Mira dónde roza el palo**: debe tocar siempre por delante de donde estaría la bola.",
+     check:"La marca en el suelo aparece siempre por delante del punto de referencia; la marca es consistente entre repeticiones"},
+    {name:"Impacto contra bolsa", reps:"3 × 12 reps", animation:"shaft_lean",
+     cue:"Golpea una bolsa de impacto y **aguanta la posición sin rebotar**: manos delante, cadera abierta, peso delantero.",
+     check:"Las manos están por delante de la cabeza del palo en el contacto; la posición se aguanta sin rebote"},
+    {name:"Raspado de línea en el suelo", reps:"3 × 20 swings", animation:"low_point",
+     cue:"Dibuja una línea con spray o tiza y **raspa siempre por delante de ella**, nunca detrás.",
+     check:"La marca cae de forma constante por delante de la línea; no hay toques por detrás"},
+    {name:"Muñeca de arriba plana", reps:"3 × 15 reps", animation:"shaft_lean",
+     cue:"Comprueba que la muñeca de arriba está **plana o algo arqueada**, nunca copada hacia atrás.",
+     check:"La muñeca de arriba no se arquea hacia atrás; el dorso de la mano mira al objetivo"},
+    {name:"Impacto con el palo frenado", reps:"3 × 12 reps", animation:"shaft_lean",
+     cue:"Alguien sujeta la cabeza del palo en la posición de impacto. **Empuja contra él con el cuerpo**, no con las manos.",
+     check:"La presión viene del giro del cuerpo; las manos no se adelantan solas ni se rompen"},
+    {name:"Divot después del tee", reps:"3 × 15 swings", animation:"low_point",
+     cue:"Un tee clavado como referencia. **El palo debe entrar en el suelo pasado el tee**, nunca antes.",
+     check:"El contacto con el suelo empieza por delante del tee; la profundidad del divot es constante"},
+    {name:"Misma altura en el impacto que en el setup", reps:"3 × 15 reps", animation:"spine_angle",
+     cue:"Monta la postura, haz el gesto y **compara la altura de tu cabeza al llegar al impacto**. Debe ser la misma, o un poco más baja.",
+     check:"La cabeza está a la misma altura o algo más baja en el impacto que en el setup; no hay extensión temprana"}
+  ],
+  drills_with_ball:[
+    {name:"Línea de toalla", reps:"15 bolas, hierro 9", animation:"low_point",
+     cue:"Una toalla 15 cm por detrás de la bola. **Golpea la bola sin tocar la toalla**. Si la tocas, tu punto bajo está retrasado.",
+     check:"La toalla no se mueve; la chuleta empieza por delante de la bola; el cuerpo no se queda atrás"},
+    {name:"Golpes de compresión a media subida", reps:"12 bolas", animation:"shaft_lean",
+     cue:"Medio backswing, foco total en **manos por delante al impacto**. Busca un vuelo más bajo y un sonido más seco.",
+     check:"El shaft se inclina hacia el objetivo en el impacto; la muñeca de arriba no se arquea hacia atrás; el cuerpo sigue girando"},
+    {name:"Tee bajísimo con hierro", reps:"12 bolas, hierro 8", animation:"low_point",
+     cue:"Tee apenas sobresaliendo del suelo. **Debes llevarte el tee después de la bola**, nunca antes.",
+     check:"El tee sale por delante de la bola; no hay golpes gordos ni topped"},
+    {name:"Vuelo bajo deliberado", reps:"12 bolas, hierro 7", animation:"shaft_lean",
+     cue:"Busca un vuelo **un 30 % más bajo** manteniendo la distancia. Solo sale con las manos adelante.",
+     check:"El vuelo es visiblemente más bajo; el sonido del impacto es más seco y compacto"},
+    {name:"Bola de referencia por detrás", reps:"10 bolas", animation:"low_point",
+     cue:"Una segunda bola 10 cm por detrás de la de juego. **Golpea la de delante sin tocar la de atrás.**",
+     check:"La bola trasera no se mueve; el ataque es claramente descendente"},
+    {name:"Punch de media altura", reps:"12 bolas, hierro 6", animation:"shaft_lean",
+     cue:"Medio backswing y finish corto a la altura del pecho. **El cuerpo gira, las manos no se rompen.**",
+     check:"El finish queda a la altura del pecho; la muñeca de arriba no se arquea después del impacto"}
+  ],
+  common_mistakes:[
+    "Flipping: la muñeca de arriba se arquea hacia atrás antes del impacto y el palo adelanta a las manos. Vuelo alto y blando.",
+    "Punto bajo detrás de la bola: golpes gordos, o topped si el cuerpo se levanta para compensar.",
+    "Colgarse del pie trasero intentando «levantar» la bola. La bola sube por el loft, no por ti.",
+    "Parar el giro del cuerpo en el impacto y dejar que las manos hagan el resto."
+  ],
+  coach_context:"Foco en el impacto: shaft lean, posición del punto bajo, compresión y rotación continua de la pelvis. Nunca inventes datos de vuelo o lanzamiento que el alumno no haya dado."
+},
+{
+  id:7, phase:"Entrega", title:"Follow-through y equilibrio",
+  goal:"El finish no es decorativo: es el recibo de lo que hiciste antes. Un finish que no aguanta delata un error anterior.",
+  theory:[
+    "La liberación es una rotación, no un giro de muñecas. Los antebrazos rotan de forma natural si el cuerpo sigue girando.",
+    "En el finish, el peso está casi todo en el pie delantero, el trasero de puntillas, pecho mirando al objetivo o más allá.",
+    "Si puedes mantener el finish tres segundos sin tambalearte, tu secuencia y tu equilibrio fueron buenos. Si no, revisa la transición."
+  ],
+  drills_no_ball:[
+    {name:"Rotación de la cara en la zona de impacto", reps:"3 × 12 reps", animation:"release_face",
+     cue:"Swings de las 9 a las 3 en cámara lenta. **La puntera adelanta al talón después del impacto**, sin forzar las muñecas.",
+     check:"La puntera rota y adelanta al talón después del impacto; la rotación viene de los antebrazos, no de un golpe de muñeca"},
+    {name:"Finish congelado", reps:"3 × 10 reps", animation:"finish_balance",
+     cue:"Swing completo y **aguanta el finish 3 segundos**. Si te mueves, el error está en la transición, no en el final.",
+     check:"El finish se mantiene 3 segundos sin corregir el pie; el pecho mira al objetivo; el pie trasero está de puntillas"},
+    {name:"Extensión a través de la bola", reps:"3 × 12 reps", animation:"extension",
+     cue:"Pasado el impacto, **los brazos se estiran al máximo** antes de doblarse. Extiende hacia el objetivo, no hacia arriba.",
+     check:"Hay extensión completa de brazos después del impacto; el palo no se recoge hacia el cuerpo"},
+    {name:"Finish a una pierna", reps:"3 × 10 reps", animation:"balance_hold",
+     cue:"Termina el swing **sobre el pie delantero solo**, con el trasero sin tocar el suelo tres segundos.",
+     check:"El pie trasero no apoya al final; el equilibrio se mantiene tres segundos sin corrección"},
+    {name:"Liberación con toalla enrollada", reps:"3 × 15 reps", animation:"release_face",
+     cue:"Una toalla enrollada como palo. **El chasquido debe sonar pasada la bola**, no en la transición.",
+     check:"El chasquido se produce después de la posición de la bola; no hay latigazo desde arriba"},
+    {name:"Giro continuo tras el impacto", reps:"3 × 12 reps", animation:"extension",
+     cue:"Exagera: **sigue girando el pecho** hasta pasar del objetivo. El cuerpo no frena en el impacto.",
+     check:"El pecho sigue girando después del impacto; no hay frenazo del torso con liberación de manos"},
+    {name:"Finish con el palo en la espalda", reps:"3 × 10 reps", animation:"balance_hold",
+     cue:"Acaba el swing con **el shaft apoyado en la espalda**, paralelo al suelo. Finish completo de verdad.",
+     check:"El shaft llega a apoyarse en la espalda; los brazos no se frenan antes de tiempo"},
+    {name:"Postura mantenida hasta pasada la bola", reps:"3 × 12 reps", animation:"spine_angle",
+     cue:"La inclinación solo se deshace **después** de que el palo haya pasado la bola. Hasta ahí, la postura aguanta.",
+     check:"El tronco conserva su inclinación hasta pasado el impacto; el enderezamiento ocurre después, al subir al finish"}
+  ],
+  drills_with_ball:[
+    {name:"Finish de 3 segundos con bola", reps:"20 bolas, hierro 7", animation:"finish_balance",
+     cue:"Solo cuenta el golpe si **aguantas el finish 3 segundos**. Falla el equilibrio, falla el golpe aunque la bola vuele bien.",
+     check:"El equilibrio se mantiene tras el impacto; el peso está sobre el pie delantero; no hay retroceso hacia el pie trasero"},
+    {name:"Draw y fade por rotación", reps:"16 bolas, hierro 7", animation:"release_face",
+     cue:"Ocho golpes con rotación extra de antebrazos, ocho frenando la cara. **Aprende a sentir la diferencia.**",
+     check:"Hay diferencia visible de rotación de antebrazos entre ambas series; el cuerpo sigue girando en las dos"},
+    {name:"Pasillo de dos tees pasada la bola", reps:"12 bolas", animation:"extension",
+     cue:"Dos tees formando un pasillo 30 cm por delante de la bola. **Extiende a través sin tocarlos.**",
+     check:"El palo pasa por el pasillo sin derribar tees; no hay recogida prematura del palo"},
+    {name:"Finish alto y completo", reps:"15 bolas, hierro 7", animation:"balance_hold",
+     cue:"Exagera el final: **manos por encima del hombro delantero** y pecho pasado el objetivo.",
+     check:"Las manos terminan por encima del hombro delantero; el pecho mira al objetivo o más allá"},
+    {name:"Serie sin mirar la bola volar", reps:"12 bolas", animation:"finish_balance",
+     cue:"Mantén la vista abajo hasta que **el finish esté montado y estable**. Luego mira.",
+     check:"La cabeza no se levanta antes del impacto; el finish se monta completo antes de mirar"}
+  ],
+  common_mistakes:[
+    "Frenar el cuerpo tras el impacto y liberar solo con las manos: hook o pull inconsistente.",
+    "Finish corto, con los brazos frenados: suele indicar miedo a la izquierda o bloqueo de cadera.",
+    "Peso atrás en el finish («finish de retroceso»): el punto bajo estaba detrás de la bola.",
+    "Recoger el palo hacia el cuerpo en lugar de extender a través: pierdes 10-15 metros."
+  ],
+  coach_context:"Foco en la liberación y el follow-through: rotación de antebrazos, extensión a través de la bola y equilibrio en el finish. El finish se usa aquí como diagnóstico de fases anteriores."
+},
+{
+  id:8, phase:"Juego", title:"Gestión de campo",
+  goal:"Bajar golpes sin cambiar el swing. Para un jugador intermedio es la vía más rápida de mejorar la tarjeta.",
+  theory:[
+    "Juega a tu dispersión real, no a tu mejor golpe. Apunta al centro del lado seguro del green, no a bandera.",
+    "Conoce tu distancia de carrera (no la total) con cada palo. La mayoría de golpes cortos vienen de usar la distancia del mejor golpe de tu vida.",
+    "Una rutina pre-golpe idéntica en cada golpe es un ancla de consistencia: mismo tiempo, mismos pasos, misma respiración."
+  ],
+  drills_no_ball:[
+    {name:"Rutina pre-golpe en cuatro pasos", reps:"3 × 10 repeticiones", animation:"pre_shot_routine",
+     cue:"Detrás de la bola veo el golpe – elijo un blanco intermedio a 1 m – monto el setup – **una mirada y pego**. Siempre el mismo tiempo.",
+     check:"Los cuatro pasos aparecen siempre en el mismo orden; el tiempo total es parecido entre repeticiones; no hay pausas extra sobre la bola"},
+    {name:"Mapa de dispersión", reps:"10 min con libreta", animation:"dispersion_cone",
+     cue:"Dibuja tu cono real de los últimos 20 golpes con hierro 7. **Apunta al centro de ese cono**, no al centro de tu ilusión.",
+     check:"El cono incluye los golpes malos, no solo los buenos; el blanco elegido está en el centro del cono"},
+    {name:"Tabla de distancias de carrera", reps:"20 min, todos los palos", animation:"dispersion_cone",
+     cue:"Anota la **distancia de carrera media** de cada palo, no la del mejor golpe de tu vida.",
+     check:"La tabla usa medias, no máximos; distingue vuelo de carrera total"},
+    {name:"Decisión en voz alta", reps:"9 golpes simulados", animation:"dispersion_cone",
+     cue:"Antes de cada golpe di en voz alta: **palo, blanco y por qué**. Si no sabes el porqué, no pegues.",
+     check:"La decisión se verbaliza antes de montar el setup; el blanco no es la bandera por defecto"},
+    {name:"Rutina con pulsaciones altas", reps:"3 × 10 reps", animation:"pre_shot_routine",
+     cue:"Haz la rutina después de 20 sentadillas. **No la acortes**: así se comporta tu rutina bajo presión.",
+     check:"La rutina conserva los cuatro pasos y el mismo tiempo pese al cansancio"},
+    {name:"Lectura del lado seguro", reps:"10 hoyos sobre plano", animation:"dispersion_cone",
+     cue:"Sobre el plano del campo, marca en cada green **la mitad desde la que es fácil recuperar**. Esa es tu diana.",
+     check:"Cada green tiene identificado el lado seguro; las banderas de riesgo se descartan de forma explícita"}
+  ],
+  drills_with_ball:[
+    {name:"Nueve ventanas al green", reps:"18 bolas", animation:"dispersion_cone",
+     cue:"Elige la mitad segura del green y **suma un punto solo si caes en esa mitad**. El objetivo no es la bandera.",
+     check:"El setup apunta al lado seguro, no a bandera; la rutina se mantiene; el palo elegido cubre la distancia media, no la máxima"},
+    {name:"Tarjeta de rutina", reps:"9 hoyos", animation:"pre_shot_routine",
+     cue:"Anota en cada hoyo si cumpliste la rutina completa. **Compara golpes con y sin rutina** al final de la vuelta.",
+     check:"La rutina no se acorta bajo presión; el tiempo sobre la bola es constante"},
+    {name:"Par 3 imaginario en el campo de prácticas", reps:"9 bolas", animation:"dispersion_cone",
+     cue:"Cada bola a un objetivo distinto, **con rutina completa y palo decidido antes**. Puntúa aciertos.",
+     check:"Cada golpe tiene objetivo y palo elegidos antes del setup; la rutina se repite igual en los nueve"},
+    {name:"Un palo más al 80 %", reps:"15 bolas", animation:"pre_shot_routine",
+     cue:"Coge un palo más de lo que crees y pega al 80 %. **Compara dispersión** con tu palo habitual a tope.",
+     check:"La velocidad baja de forma evidente; la dispersión se estrecha respecto a la serie a máxima potencia"},
+    {name:"Sin repetir palo dos veces seguidas", reps:"18 bolas", animation:"dispersion_cone",
+     cue:"Cambia de palo y de objetivo en cada golpe, como en el campo. **Un solo intento por situación.**",
+     check:"No se repite palo consecutivo; cada golpe lleva rutina completa; no hay golpes de calentamiento encubiertos"}
+  ],
+  common_mistakes:[
+    "Apuntar a bandera siempre, incluso en banderas pegadas a bunker o agua.",
+    "Usar la distancia del mejor golpe en lugar de la media: casi todo se queda corto.",
+    "Intentar el golpe heroico desde una mala posición en vez de volver a la calle.",
+    "Cambiar la rutina cuando hay presión: justo cuando más la necesitas."
+  ],
+  coach_context:"Foco en estrategia y gestión del campo: dispersión real, elección de blanco, control de distancias y rutina pre-golpe. Aquí el coach no debe cambiar la técnica, sino las decisiones."
+}
+];
+/* ===================================================================
+   MOTOR 3D — esqueleto con cinemática inversa, cámara en perspectiva
+   =================================================================== */
+const NS = "http://www.w3.org/2000/svg";
+const RAD = Math.PI/180;
+const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function E(tag, attrs, parent){
+  const e = document.createElementNS(NS, tag);
+  if(attrs) for(const k in attrs) e.setAttribute(k, attrs[k]);
+  if(parent) parent.appendChild(e);
+  return e;
+}
+const A = (e,k,v) => e.setAttribute(k,v);
+
+/* --- vectores --- */
+const v3  = (x,y,z) => ({x,y,z});
+const add = (a,b) => v3(a.x+b.x, a.y+b.y, a.z+b.z);
+const sub = (a,b) => v3(a.x-b.x, a.y-b.y, a.z-b.z);
+const mul = (a,k) => v3(a.x*k, a.y*k, a.z*k);
+const dot = (a,b) => a.x*b.x + a.y*b.y + a.z*b.z;
+const len = a => Math.hypot(a.x,a.y,a.z);
+const nrm = a => { const l = len(a)||1; return mul(a,1/l); };
+const lerp3 = (a,b,u) => v3(a.x+(b.x-a.x)*u, a.y+(b.y-a.y)*u, a.z+(b.z-a.z)*u);
+const rX = (p,a) => { const c=Math.cos(a), s=Math.sin(a); return v3(p.x, p.y*c-p.z*s, p.y*s+p.z*c); };
+const rY = (p,a) => { const c=Math.cos(a), s=Math.sin(a); return v3(p.x*c+p.z*s, p.y, -p.x*s+p.z*c); };
+const rZ = (p,a) => { const c=Math.cos(a), s=Math.sin(a); return v3(p.x*c-p.y*s, p.x*s+p.y*c, p.z); };
+
+/* --- cámara en perspectiva --- */
+function mkCam(o){
+  const az=(o.az||0)*RAD, el=(o.el||0)*RAD;
+  const dist=o.dist||300, fov=o.fov||262;
+  const cx=o.cx!==undefined?o.cx:170, cy=o.cy!==undefined?o.cy:116;
+  const piv=o.pivot||v3(0,95,-30);
+  return p => {
+    let q = sub(p,piv); q = rY(q,az); q = rX(q,el);
+    const z = q.z + dist, k = fov/Math.max(z,50);
+    return {x: cx + q.x*k, y: cy - q.y*k, k, z};
+  };
+}
+
+/* --- cinemática inversa de dos huesos --- */
+function ik2(root, end, l1, l2, pole){
+  const d = sub(end,root);
+  const raw = len(d) || 0.001;
+  const L = Math.min(Math.max(raw, 0.5), l1+l2-0.4);
+  const u = mul(d, 1/raw);
+  const x = (L*L + l1*l1 - l2*l2) / (2*L);
+  const y = Math.sqrt(Math.max(0, l1*l1 - x*x));
+  let p = sub(pole, root);
+  p = sub(p, mul(u, dot(p,u)));
+  if(len(p) < 0.01) p = v3(0,-1,0);
+  return add(root, add(mul(u,x), mul(nrm(p), y)));
+}
+
+/* --- proporciones del golfista (cm) --- */
+const B = {
+  pelY:93, pelZ:-56, spine:44, hub:56, neck:62, head:75,
+  sh:21, hip:12, upper:31, fore:29, thigh:43, shin:41, foot:27,
+  handR:70, handInc:12*RAD, shaftInc:31*RAD, clubL:85
+};
+
+/* --- claves de pose del swing completo --- */
+const SK = [
+  {t:0.000, phi:  -4, pel:  0, ch:   0, hi:30, ti:-3, sw: 0, co:   0, wt:.50, fd:1},
+  {t:0.090, phi:  -4, pel:  0, ch:   0, hi:30, ti:-3, sw: 0, co:   0, wt:.50, fd:1},
+  {t:0.180, phi: -48, pel: -9, ch: -28, hi:30, ti:-4, sw:-2, co: -26, wt:.44, fd:1},
+  {t:0.280, phi:-106, pel:-24, ch: -64, hi:29, ti:-5, sw:-4, co: -82, wt:.37, fd:1},
+  {t:0.380, phi:-152, pel:-37, ch: -90, hi:28, ti:-7, sw:-4, co:-108, wt:.34, fd:1},
+  {t:0.430, phi:-158, pel:-40, ch: -94, hi:28, ti:-7, sw:-3, co:-112, wt:.36, fd:1},
+  {t:0.470, phi:-150, pel:-16, ch: -88, hi:29, ti:-9, sw: 2, co:-110, wt:.55, fd:1},
+  {t:0.520, phi: -98, pel:  6, ch: -58, hi:30, ti:-12,sw: 5, co: -97, wt:.72, fd:1},
+  {t:0.560, phi: -40, pel: 28, ch: -26, hi:31, ti:-13,sw: 6, co: -54, wt:.82, fd:1},
+  {t:0.595, phi:  11, pel: 42, ch:  -4, hi:30, ti:-11,sw: 7, co: -14, wt:.88, fd:1},
+  {t:0.650, phi:  52, pel: 56, ch:  28, hi:27, ti: -7,sw: 8, co:  24, wt:.93, fd:1},
+  {t:0.730, phi: 110, pel: 72, ch:  64, hi:19, ti:  0,sw: 9, co:  84, wt:.96, fd:1},
+  {t:0.820, phi: 158, pel: 85, ch:  97, hi: 7, ti:  7,sw:10, co: 116, wt:.98, fd:1},
+  {t:0.920, phi: 162, pel: 87, ch:  99, hi: 6, ti:  8,sw:10, co: 118, wt:.98, fd:1},
+  {t:0.960, phi: 162, pel: 87, ch:  99, hi: 6, ti:  8,sw:10, co: 118, wt:.98, fd:.25},
+  {t:1.000, phi:  -4, pel:  0, ch:   0, hi:30, ti:-3, sw: 0, co:   0, wt:.50, fd:.25}
+];
+const PK = ["phi","pel","ch","hi","ti","sw","co","wt","fd"];
+
+function poseAt(t){
+  t = ((t % 1) + 1) % 1;
+  let i = 0;
+  while(i < SK.length-2 && t > SK[i+1].t) i++;
+  const a = SK[i], b = SK[i+1];
+  let u = (t - a.t) / ((b.t - a.t) || 1);
+  u = Math.max(0, Math.min(1, u));
+  const e = u*u*(3-2*u);
+  const o = {};
+  for(const k of PK) o[k] = a[k] + (b[k]-a[k])*e;
+  return o;
+}
+
+/* --- construcción del cuerpo en coordenadas de mundo --- */
+function buildBody(P, opt){
+  opt = opt || {};
+  const hi = P.hi*RAD, ti = P.ti*RAD;
+  const axis = rZ(rX(v3(0,1,0), hi), ti);
+  const T = turn => p => rZ(rX(rY(p, turn*RAD), hi), ti);
+  const Tp = T(P.pel), Tc = T(P.ch);
+
+  const pelvis = v3(P.sw, B.pelY, B.pelZ - 16*Math.sin(hi));
+  const chest  = add(pelvis, mul(axis, B.spine));
+  const hub    = add(pelvis, mul(axis, B.hub));
+  const neck   = add(pelvis, mul(axis, B.neck));
+  const head   = add(pelvis, mul(axis, B.head));
+
+  const shL = add(chest,  Tc(v3( B.sh, 2, 0)));
+  const shR = add(chest,  Tc(v3(-B.sh, 2, 0)));
+  const hipL= add(pelvis, Tp(v3( B.hip, 0, 0)));
+  const hipR= add(pelvis, Tp(v3(-B.hip, 0, 0)));
+
+  const scale = opt.phiScale || 1;
+  const phi = P.phi * scale * RAD;
+  const co  = P.co  * scale;
+  let h = v3(B.handR*Math.sin(phi), -B.handR*Math.cos(phi), 0);
+  h = rX(h, -B.handInc);
+  const hands = add(hub, h);
+
+  const th = (P.phi*scale + co) * RAD;
+  let s = rX(v3(Math.sin(th), -Math.cos(th), 0), -B.shaftInc);
+  const clubL = opt.clubL || B.clubL;
+  const chead = add(hands, mul(s, clubL));
+
+  const pole = add(hands, v3(0,-46,34));
+  const elbL = ik2(shL, hands, B.upper, B.fore, pole);
+  const elbR = ik2(shR, hands, B.upper, B.fore, pole);
+
+  const stance = opt.stance !== undefined ? opt.stance : B.foot;
+  const ankL = v3( stance, 9, B.pelZ), ankR = v3(-stance, 9, B.pelZ);
+  const heel = Math.max(0, (P.wt - .72)) * 3.2;
+  const ankR2 = v3(ankR.x, ankR.y + heel*4, ankR.z - heel*2);
+  const kneeL = ik2(hipL, ankL,  B.thigh, B.shin, add(hipL, v3( 4,-24,40)));
+  const kneeR = ik2(hipR, ankR2, B.thigh, B.shin, add(hipR, v3(-4,-24,40)));
+
+  return {pelvis,chest,hub,neck,head,shL,shR,hipL,hipR,hands,chead,elbL,elbR,
+          ankL,ankR:ankR2,kneeL,kneeR,axis,Tc,Tp,heel,P,shaftDir:s};
+}
+
+/* --- utilidades de dibujo --- */
+function poly(pts){ return pts.map(p => p.x.toFixed(1)+","+p.y.toFixed(1)).join(" "); }
+function limb(outline, fill, pts, w){
+  const d = poly(pts);
+  A(outline,"points",d); A(fill,"points",d);
+  A(outline,"stroke-width",(w+3).toFixed(1));
+  A(fill,"stroke-width",w.toFixed(1));
+}
+
+/* ===================================================================
+   ESCENA DE SWING
+   =================================================================== */
+function swingScene(opt){
+  return function(host){
+    host.innerHTML = "";
+    const VW = 340, VH = 232;
+    const svg = E("svg",{viewBox:`0 0 ${VW} ${VH}`,"aria-hidden":"true"}, host);
+    const defs = E("defs",null,svg);
+
+    const lg = E("linearGradient",{id:"tg"+(++uid),x1:0,y1:0,x2:0,y2:1},defs);
+    E("stop",{offset:"0%","stop-color":"rgba(244,247,245,.22)"},lg);
+    E("stop",{offset:"100%","stop-color":"rgba(244,247,245,.08)"},lg);
+    const torsoFill = "url(#"+lg.getAttribute("id")+")";
+
+    const gGround = E("g",null,svg);
+    const gBack   = E("g",null,svg);
+    const gFig    = E("g",null,svg);
+    const gClub   = E("g",null,svg);
+    const gOver   = E("g",null,svg);
+    const gUI     = E("g",null,svg);
+
+    /* suelo */
+    const groundLines = [];
+    for(let i=0;i<5;i++) groundLines.push(E("line",{class:"g-ln"},gGround));
+    const shadow = E("ellipse",{fill:"rgba(0,0,0,.26)"},gGround);
+    const ball   = E("circle",{fill:"#fff"},gGround);
+
+    /* estela del palo */
+    const trailEl = E("polyline",{fill:"none",stroke:"var(--gold)","stroke-width":2,
+      "stroke-linecap":"round","stroke-linejoin":"round",opacity:.55},gBack);
+
+    /* figura */
+    const mk = (parent,color,op) => {
+      const o = E("polyline",{fill:"none",stroke:"#06251b","stroke-linecap":"round",
+        "stroke-linejoin":"round",opacity:op||1},parent);
+      const f = E("polyline",{fill:"none",stroke:color,"stroke-linecap":"round",
+        "stroke-linejoin":"round",opacity:op||1},parent);
+      return {o,f};
+    };
+    const legR = mk(gFig,"#C9D6CE"), legL = mk(gFig,"#E6EDE8");
+    const torso = E("polygon",{fill:torsoFill,stroke:"#E6EDE8","stroke-width":2,
+      "stroke-linejoin":"round"},gFig);
+    const neckEl = mk(gFig,"#E6EDE8");
+    const armR = mk(gFig,"#C9D6CE"), armL = mk(gFig,"#F2F6F3");
+    const headEl = E("ellipse",{fill:"#EFF4F1",stroke:"#06251b","stroke-width":2},gFig);
+    const capEl  = E("path",{fill:"var(--gold)",opacity:.92},gFig);
+    const shoeL = E("ellipse",{fill:"#D8E2DB",stroke:"#06251b","stroke-width":1.5},gFig);
+    const shoeR = E("ellipse",{fill:"#B9C8BF",stroke:"#06251b","stroke-width":1.5},gFig);
+    const gloveEl = E("circle",{fill:"var(--glove)",stroke:"#06251b","stroke-width":1.5},gFig);
+
+    /* palo */
+    const shaftO = E("line",{stroke:"#06251b","stroke-width":5,"stroke-linecap":"round"},gClub);
+    const shaftF = E("line",{stroke:"#EDEFF0","stroke-width":2.6,"stroke-linecap":"round"},gClub);
+    const headCl = E("polygon",{fill:"#DDE3E6",stroke:"#06251b","stroke-width":1.4,
+      "stroke-linejoin":"round"},gClub);
+
+    const ov = buildOverlay(opt.overlay, gOver, gUI, VW, VH);
+
+    const cam = mkCam(Object.assign({pivot:v3(0,124,-40)}, opt.cam||{}));
+    const trail = [];
+    let lastT = -9, ballPos = null;
+
+    function draw(tt){
+      const t = mapPhase(tt, opt);
+      const P = poseAt(t);
+      if(opt.poseHinge){
+        const u = pp(tt);
+        P.hi = 2 + u*30; P.phi = -4 + u*0; P.pel=0; P.ch=0;
+        P.ti = -3*u; P.sw = 0; P.co = u*6; P.wt = .5; P.fd = 1;
+      }
+      if(opt.clampPhi){
+        const c = opt.clampPhi;
+        P.phi = Math.max(-c, Math.min(c, P.phi));
+        P.co  = Math.max(-c*0.8, Math.min(c*0.8, P.co));
+      }
+      const b = buildBody(P, opt);
+      const p = cam;
+
+      if(!ballPos){
+        const a0 = buildBody(poseAt(0), opt);
+        ballPos = v3(a0.chead.x, 2.2, a0.chead.z);
+      }
+
+      /* suelo */
+      const zs = [ballPos.z, ballPos.z-26, ballPos.z-52, B.pelZ-8, B.pelZ-30];
+      groundLines.forEach((l,i)=>{
+        const a = p(v3(-150,0,zs[i])), c = p(v3(150,0,zs[i]));
+        A(l,"x1",a.x); A(l,"y1",a.y); A(l,"x2",c.x); A(l,"y2",c.y);
+        A(l,"stroke", i===0 ? "rgba(201,168,76,.38)" : "rgba(244,247,245,.10)");
+        A(l,"stroke-width", i===0 ? 1.6 : 1);
+      });
+      const bp = p(ballPos);
+      A(ball,"cx",bp.x); A(ball,"cy",bp.y); A(ball,"r",(3.1*bp.k).toFixed(1));
+      A(ball,"opacity", opt.noBall ? 0 : 1);
+      const sp = p(v3(b.pelvis.x,0,B.pelZ));
+      A(shadow,"cx",sp.x); A(shadow,"cy",sp.y);
+      A(shadow,"rx",(34*sp.k).toFixed(1)); A(shadow,"ry",(7*sp.k).toFixed(1));
+
+      /* estela */
+      if(Math.abs(t-lastT) > .25) trail.length = 0;
+      lastT = t;
+      if(opt.trail !== false){
+        trail.push(p(b.chead));
+        if(trail.length > 26) trail.shift();
+        A(trailEl,"points", poly(trail));
+        A(trailEl,"opacity", trail.length>4 ? .5 : 0);
+      }
+
+      /* profundidad: dibuja primero el lado lejano */
+      const farTrail = p(b.shR).z > p(b.shL).z;
+      gFig.insertBefore(farTrail ? armL.o : armR.o, gFig.firstChild);
+
+      /* piernas */
+      const kL=p(b.kneeL), kR=p(b.kneeR), aL=p(b.ankL), aR=p(b.ankR);
+      const hL=p(b.hipL), hR=p(b.hipR);
+      limb(legR.o, legR.f, [hR,kR,aR], 10.6*hR.k);
+      limb(legL.o, legL.f, [hL,kL,aL], 10.6*hL.k);
+      [[shoeR,aR,b.heel],[shoeL,aL,0]].forEach(([el,a,h])=>{
+        A(el,"cx",a.x); A(el,"cy",a.y+2*a.k);
+        A(el,"rx",(9*a.k).toFixed(1)); A(el,"ry",(4.6*a.k).toFixed(1));
+        A(el,"transform",`rotate(${(-h*9).toFixed(1)} ${a.x} ${a.y})`);
+      });
+
+      /* torso */
+      const sL=p(b.shL), sR=p(b.shR);
+      A(torso,"points", poly([sL,sR,hR,hL]));
+      A(torso,"stroke-width",(2.4*sL.k).toFixed(1));
+      const nk=p(b.neck), hd=p(b.head);
+      limb(neckEl.o, neckEl.f, [p(b.chest),nk], 11*nk.k);
+
+      /* brazos */
+      const eL=p(b.elbL), eR=p(b.elbR), hn=p(b.hands);
+      limb(armR.o, armR.f, [sR,eR,hn], 8.1*hn.k);
+      limb(armL.o, armL.f, [sL,eL,hn], 8.1*hn.k);
+      if(opt.arm === "trail"){ A(armL.o,"opacity",.12); A(armL.f,"opacity",.12); }
+      else { A(armL.o,"opacity",1); A(armL.f,"opacity",1); }
+      A(gloveEl,"cx",hn.x); A(gloveEl,"cy",hn.y); A(gloveEl,"r",(6*hn.k).toFixed(1));
+
+      /* cabeza */
+      A(headEl,"cx",hd.x); A(headEl,"cy",hd.y);
+      A(headEl,"rx",(9.3*hd.k).toFixed(1)); A(headEl,"ry",(10.6*hd.k).toFixed(1));
+      const face = p(add(b.head, rZ(rX(rY(v3(0,0,12), b.P.ch*RAD), b.P.hi*RAD), b.P.ti*RAD)));
+      const dx = face.x-hd.x, dy = face.y-hd.y, dl = Math.hypot(dx,dy)||1;
+      const rr = 10.4*hd.k;
+      A(capEl,"d",`M ${hd.x-rr*0.98} ${hd.y-rr*0.22} A ${rr} ${rr} 0 0 1 ${hd.x+rr*0.98} ${hd.y-rr*0.22} `+
+        `L ${hd.x+dx/dl*rr*1.5} ${hd.y+dy/dl*rr*0.5} L ${hd.x-rr*0.98} ${hd.y-rr*0.22} Z`);
+
+      /* palo */
+      const ch=p(b.chead);
+      [[shaftO,5.2],[shaftF,2.6]].forEach(([el,w])=>{
+        A(el,"x1",hn.x); A(el,"y1",hn.y); A(el,"x2",ch.x); A(el,"y2",ch.y);
+        A(el,"stroke-width",(w*ch.k).toFixed(1));
+      });
+      const sd = Math.atan2(ch.y-hn.y, ch.x-hn.x);
+      const px = Math.cos(sd+Math.PI/2), py = Math.sin(sd+Math.PI/2);
+      const hw = 9.5*ch.k, hh = 4.2*ch.k;
+      A(headCl,"points",
+        `${(ch.x-px*hw).toFixed(1)},${(ch.y-py*hw).toFixed(1)} `+
+        `${(ch.x+px*hw).toFixed(1)},${(ch.y+py*hw).toFixed(1)} `+
+        `${(ch.x+px*hw+Math.cos(sd)*hh).toFixed(1)},${(ch.y+py*hw+Math.sin(sd)*hh).toFixed(1)} `+
+        `${(ch.x-px*hw+Math.cos(sd)*hh).toFixed(1)},${(ch.y-py*hw+Math.sin(sd)*hh).toFixed(1)}`);
+
+      gFig.style.opacity = P.fd.toFixed(2);
+      gClub.style.opacity = P.fd.toFixed(2);
+      if(ov) ov(b, p, t, P, ballPos);
+    }
+
+    return {host, dur: opt.dur || 5.4, draw};
+  };
+}
+
+function mapPhase(t, o){
+  const r = o.range || [0,1];
+  if(o.pingpong){
+    const u = t < .5 ? t*2 : (1-t)*2;
+    const e = u*u*(3-2*u);
+    return r[0] + e*(r[1]-r[0]);
+  }
+  return r[0] + t*(r[1]-r[0]);
+}
+/* ===================================================================
+   CAPAS DE DATOS SOBRE LA ANIMACIÓN
+   =================================================================== */
+function buildOverlay(kind, g, ui, VW, VH){
+  if(!kind) return null;
+  const txt = (x,y,cls,anchor) => E("text",{x,y,class:cls||"ov-t",
+    "text-anchor":anchor||"start"},ui);
+
+  if(kind === "plane"){
+    const pl = E("polygon",{fill:"rgba(201,168,76,.09)",stroke:"var(--gold)",
+      "stroke-width":1.2,"stroke-dasharray":"4 4"},g);
+    const t1 = txt(10,18,"ov-g");
+    return (b,p)=>{
+      const pts=[];
+      for(let i=0;i<=40;i++){
+        const a = (-200 + i*(360/40))*RAD;
+        let s = rX(v3(Math.sin(a),-Math.cos(a),0), -B.shaftInc);
+        pts.push(p(add(b.hub, mul(s, (B.handR + B.clubL)*0.92))));
+      }
+      A(pl,"points",poly(pts));
+      t1.textContent = "Plano del palo";
+    };
+  }
+
+  if(kind === "turn"){
+    const sl = E("line",{stroke:"var(--gold)","stroke-width":2.6,"stroke-linecap":"round"},g);
+    const hl = E("line",{stroke:"rgba(244,247,245,.75)","stroke-width":2.2,"stroke-linecap":"round"},g);
+    const d1 = E("circle",{fill:"var(--gold)"},g), d2 = E("circle",{fill:"var(--gold)"},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t,P)=>{
+      const a=p(b.shL), c=p(b.shR);
+      A(sl,"x1",a.x);A(sl,"y1",a.y);A(sl,"x2",c.x);A(sl,"y2",c.y);
+      A(d1,"cx",a.x);A(d1,"cy",a.y);A(d1,"r",3.2*a.k);
+      A(d2,"cx",c.x);A(d2,"cy",c.y);A(d2,"r",3.2*c.k);
+      const e=p(b.hipL), f=p(b.hipR);
+      A(hl,"x1",e.x);A(hl,"y1",e.y);A(hl,"x2",f.x);A(hl,"y2",f.y);
+      t1.textContent = "Hombros " + Math.round(Math.abs(P.ch)) + "°";
+      t2.textContent = "Caderas " + Math.round(Math.abs(P.pel)) + "°";
+    };
+  }
+
+  if(kind === "triangle"){
+    const tri = E("polygon",{fill:"rgba(201,168,76,.17)",stroke:"var(--gold)",
+      "stroke-width":1.8,"stroke-linejoin":"round"},g);
+    const t1 = txt(10,18,"ov-g");
+    return (b,p)=>{
+      A(tri,"points", poly([p(b.shL),p(b.shR),p(b.hands)]));
+      t1.textContent = "Triángulo en bloque";
+    };
+  }
+
+  if(kind === "pressure"){
+    const c1 = E("ellipse",{fill:"rgba(201,168,76,.30)"},g);
+    const c2 = E("ellipse",{fill:"rgba(201,168,76,.30)"},g);
+    const bar = E("rect",{fill:"rgba(244,247,245,.10)",rx:4},ui);
+    const fil = E("rect",{fill:"var(--gold)",rx:4},ui);
+    A(bar,"x",VW-130); A(bar,"y",VH-20); A(bar,"width",118); A(bar,"height",7);
+    A(fil,"y",VH-20); A(fil,"height",7);
+    const t1 = txt(10,18,"ov-g");
+    const t2 = txt(VW-12,VH-26,"ov-t","end");
+    return (b,p,t,P)=>{
+      const a=p(b.ankL), c=p(b.ankR);
+      const wl = P.wt, wr = 1-P.wt;
+      A(c1,"cx",a.x);A(c1,"cy",a.y+3*a.k);A(c1,"rx",(7+16*wl)*a.k);A(c1,"ry",(3+6*wl)*a.k);
+      A(c2,"cx",c.x);A(c2,"cy",c.y+3*c.k);A(c2,"rx",(7+16*wr)*c.k);A(c2,"ry",(3+6*wr)*c.k);
+      A(fil,"x",VW-130); A(fil,"width",(118*wl).toFixed(1));
+      t1.textContent = "Presión en el pie";
+      t2.textContent = Math.round(wr*100)+" / "+Math.round(wl*100);
+    };
+  }
+
+  if(kind === "lean"){
+    const vl = E("line",{stroke:"rgba(244,247,245,.4)","stroke-width":1.3,
+      "stroke-dasharray":"4 4"},g);
+    const ex = E("line",{stroke:"var(--gold)","stroke-width":1.4,"stroke-dasharray":"3 4"},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t,P,ball)=>{
+      const a=p(ball), c=p(v3(ball.x,120,ball.z));
+      A(vl,"x1",a.x);A(vl,"y1",a.y);A(vl,"x2",c.x);A(vl,"y2",c.y);
+      const h=p(b.hands), ch=p(b.chead);
+      const ux=h.x-ch.x, uy=h.y-ch.y, ul=Math.hypot(ux,uy)||1;
+      A(ex,"x1",ch.x);A(ex,"y1",ch.y);
+      A(ex,"x2",ch.x+ux/ul*150);A(ex,"y2",ch.y+uy/ul*150);
+      const lean = Math.round(Math.atan2(b.hands.x-b.chead.x, b.hands.y-b.chead.y)/RAD);
+      t1.textContent = "Inclinación del shaft";
+      t2.textContent = lean>1 ? lean+"° hacia el objetivo"
+        : lean<-1 ? Math.abs(lean)+"° hacia atrás · flipping" : "shaft vertical";
+      A(t1,"fill", lean>4 ? "var(--green)" : "var(--gold)");
+    };
+  }
+
+  if(kind === "lowpoint"){
+    const arc = E("polyline",{fill:"none",stroke:"rgba(201,168,76,.45)",
+      "stroke-width":1.4,"stroke-dasharray":"3 4"},g);
+    const dv = E("path",{stroke:"var(--gold)","stroke-width":5,fill:"none",
+      "stroke-linecap":"round",opacity:0},g);
+    const mk = E("line",{stroke:"var(--green)","stroke-width":1.6,"stroke-dasharray":"3 3"},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t,P,ball)=>{
+      const pts=[]; let low3=null;
+      for(let i=0;i<=30;i++){
+        const w = buildBody(poseAt(0.50 + (i/30)*0.16)).chead;
+        if(!low3 || w.y < low3.y) low3 = w;
+        pts.push(p(w));
+      }
+      A(arc,"points",poly(pts));
+      let low = pts[0];
+      pts.forEach(q=>{ if(q.y>low.y) low=q; });
+      A(mk,"x1",low.x);A(mk,"y1",low.y-26);A(mk,"x2",low.x);A(mk,"y2",low.y+8);
+      const a=p(ball);
+      A(dv,"d",`M ${low.x-6} ${low.y+1} q 14 7 30 1`);
+      A(dv,"opacity", t>0.60 ? Math.min(1,(t-0.60)*8) : 0);
+      const d3 = Math.round(low3.x - ball.x);
+      t1.textContent = "Punto bajo por delante";
+      t2.textContent = (d3>=0 ? "la chuleta empieza por delante de la bola" : "cae por detrás · golpe gordo");
+      A(t1,"fill", d3>=0 ? "var(--green)" : "var(--red)");
+    };
+  }
+
+  if(kind === "wrist"){
+    const arc = E("path",{fill:"none",stroke:"var(--gold)","stroke-width":1.6},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t,P)=>{
+      const h=p(b.hands), e=p(b.elbL), c=p(b.chead);
+      const fa=nrm(sub(b.hands,b.elbL)), sh=nrm(sub(b.chead,b.hands));
+      const inc=180-Math.acos(Math.max(-1,Math.min(1,dot(fa,sh))))*180/Math.PI;
+      const a1=Math.atan2(e.y-h.y,e.x-h.x), a2=Math.atan2(c.y-h.y,c.x-h.x);
+      const r=22;
+      const x1=h.x+Math.cos(a1)*r, y1=h.y+Math.sin(a1)*r;
+      const x2=h.x+Math.cos(a2)*r, y2=h.y+Math.sin(a2)*r;
+      let d=(a2-a1)*180/Math.PI; while(d<-180)d+=360; while(d>180)d-=360;
+      A(arc,"d",`M ${x1} ${y1} A ${r} ${r} 0 0 ${d>0?1:0} ${x2} ${y2}`);
+      t1.textContent = "Ángulo antebrazo-palo";
+      t2.textContent = Math.round(inc) + "°" + (inc<105 ? "  · set completo" : "");
+    };
+  }
+
+  if(kind === "bars"){
+    const names=["Cadera","Torso","Brazos","Palo"];
+    const rows = names.map((n,i)=>{
+      const y = 14 + i*17;
+      E("text",{x:10,y:y+8,class:"ov-t"},ui).textContent = n;
+      const bg = E("rect",{x:66,y:y,width:92,height:11,rx:5.5,
+        fill:"rgba(244,247,245,.09)"},ui);
+      const fg = E("rect",{x:66,y:y,width:0,height:11,rx:5.5,fill:"var(--gold)"},ui);
+      return fg;
+    });
+    return (b,p,t)=>{
+      const start=[0.455,0.482,0.508,0.535];
+      rows.forEach((r,i)=>{
+        const u=Math.max(0,Math.min(1,(t-start[i])/0.055));
+        A(r,"width",(92*u).toFixed(1));
+        A(r,"opacity",(0.35+0.65*u).toFixed(2));
+      });
+    };
+  }
+
+  if(kind === "beats"){
+    const dots=[];
+    for(let i=0;i<4;i++) dots.push(E("circle",{cx:VW-108+i*26,cy:VH-16,r:5,
+      fill:"var(--gold)",opacity:.2},ui));
+    const t1 = txt(10,18,"ov-g");
+    return (b,p,t)=>{
+      const marks=[0.10,0.23,0.36,0.52];
+      dots.forEach((d,i)=>{
+        const on = t>=marks[i] && t<marks[i]+0.10;
+        A(d,"opacity", on?1:.2);
+        A(d,"r", on?6.4:5);
+        A(d,"fill", i===3?"var(--green)":"var(--gold)");
+      });
+      t1.textContent = t<0.44 ? "Subida · 3 tiempos" : "Bajada · 1 tiempo";
+    };
+  }
+
+  if(kind === "balance"){
+    const vl = E("line",{stroke:"rgba(201,168,76,.5)","stroke-width":1.3,
+      "stroke-dasharray":"4 4",opacity:0},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t)=>{
+      const h=p(b.head), a=p(b.ankL);
+      const on = t>0.80;
+      A(vl,"opacity",on?1:0);
+      A(vl,"x1",h.x);A(vl,"y1",h.y-14);A(vl,"x2",a.x);A(vl,"y2",a.y+6);
+      t1.textContent = "Finish en equilibrio";
+      t2.textContent = on ? "Aguanta "+Math.min(3,Math.ceil((t-0.80)*16))+" s" : "";
+    };
+  }
+
+  if(kind === "profile"){
+    const plumb = E("line",{stroke:"var(--gold)","stroke-width":1.4,
+      "stroke-dasharray":"4 4"},g);
+    const arm = E("line",{stroke:"var(--green)","stroke-width":1.8,
+      "stroke-dasharray":"3 3"},g);
+    const toe = E("circle",{fill:"var(--gold)",r:3},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p)=>{
+      const sh = b.shL, toeW = v3(sh.x, 0, B.pelZ + 13);
+      const a = p(v3(sh.x, sh.y, sh.z)), c = p(v3(sh.x, 0, sh.z));
+      A(plumb,"x1",a.x);A(plumb,"y1",a.y);A(plumb,"x2",c.x);A(plumb,"y2",c.y);
+      const h = p(b.hands);
+      A(arm,"x1",a.x);A(arm,"y1",a.y);A(arm,"x2",h.x);A(arm,"y2",h.y);
+      const q = p(toeW);
+      A(toe,"cx",q.x);A(toe,"cy",q.y);
+      const d = Math.round(sh.z - toeW.z);
+      t1.textContent = "Perfil: hombros sobre las puntas";
+      t2.textContent = Math.abs(d) <= 6 ? "alineado"
+        : (d < 0 ? Math.abs(d)+" cm por detrás" : d+" cm por delante");
+      A(t1,"fill", Math.abs(d)<=6 ? "var(--green)" : "var(--gold)");
+    };
+  }
+
+  if(kind === "path"){
+    const gate = E("circle",{fill:"none",stroke:"var(--green)","stroke-width":1.8,
+      "stroke-dasharray":"3 3"},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t)=>{
+      const target = buildBody(poseAt(0.20)).chead;
+      const q = p(target);
+      A(gate,"cx",q.x);A(gate,"cy",q.y);A(gate,"r",9*q.k);
+      t1.textContent = "Camino de la cabeza del palo";
+      t2.textContent = "Por dentro y hacia arriba";
+    };
+  }
+
+  if(kind === "hinge"){
+    const sp = E("line",{stroke:"var(--gold)","stroke-width":2.4,"stroke-linecap":"round"},g);
+    const vl = E("line",{stroke:"rgba(244,247,245,.3)","stroke-width":1.2,
+      "stroke-dasharray":"4 4"},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t,P)=>{
+      const a=p(b.pelvis), c=p(b.head);
+      A(sp,"x1",a.x);A(sp,"y1",a.y);A(sp,"x2",c.x);A(sp,"y2",c.y);
+      A(vl,"x1",a.x);A(vl,"y1",a.y);A(vl,"x2",a.x);A(vl,"y2",a.y-78);
+      t1.textContent = "Bisagra de cadera";
+      t2.textContent = Math.round(P.hi) + "° de inclinación";
+    };
+  }
+  return null;
+}
+
+/* ===================================================================
+   GESTOR DE ESCENAS
+   =================================================================== */
+let uid = 0;
+const scenes = new Map();
+const io = ("IntersectionObserver" in window)
+  ? new IntersectionObserver(es => es.forEach(e => {
+      const s = scenes.get(e.target.id);
+      if(s){ s.visible = e.isIntersecting; if(e.isIntersecting) s.dirty = true; }
+    }), {rootMargin:"80px"})
+  : null;
+
+function mountScenes(root){
+  root.querySelectorAll("[data-scene]").forEach(el=>{
+    if(el.dataset.mounted) return;
+    const def = SCENES[el.dataset.scene];
+    if(!def) return;
+    el.dataset.mounted = "1";
+    const inst = def.create(el);
+    inst.speed = 1; inst.paused = REDUCED; inst.t = REDUCED ? (def.still||0.38) : 0;
+    inst.visible = !io; inst.dirty = true;
+    scenes.set(el.id, inst);
+    if(io) io.observe(el);
+  });
+}
+
+let lastFrame = performance.now();
+function tick(now){
+  const dt = Math.min(0.05, (now - lastFrame)/1000);
+  lastFrame = now;
+  scenes.forEach((s,id)=>{
+    if(!s.host.isConnected){ scenes.delete(id); return; }
+    if(!s.visible) return;
+    if(!s.paused){ s.t = (s.t + dt*s.speed/s.dur) % 1; s.dirty = true; }
+    if(s.dirty){ s.draw(s.t); s.dirty = false; }
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+/* ===================================================================
+   MANOS — dibujo paramétrico con falanges reales
+   =================================================================== */
+function fingerPts(bx, by, dir, segs, bends, curl){
+  let a = dir, x = bx, y = by;
+  const pts = [[x,y]];
+  for(let i=0;i<segs.length;i++){
+    a += bends[i]*curl;
+    const r = a*RAD;
+    x += Math.sin(r)*segs[i];
+    y -= Math.cos(r)*segs[i];
+    pts.push([x,y]);
+  }
+  return pts;
+}
+const P2 = pts => pts.map(p => p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+
+/** Mano vista por el dorso, agarrando un shaft vertical situado en x≈-40. */
+function handBack(parent, o){
+  o = o || {};
+  const skin = o.glove ? "var(--glove)" : "var(--skin)";
+  const dark = o.glove ? "var(--glove-d)" : "var(--skin-d)";
+  const g = E("g",null,parent);
+  const back = E("g",null,g);     // dedos envueltos (detrás del shaft)
+  const front = E("g",null,g);    // punta de los dedos + dorso + pulgar
+
+  const FB = [[-16,-48,-40],[-3,-53,-44],[9,-52,-48],[20,-46,-54]];
+  const SEG = [[20,15,12],[22,16,12],[20,15,11],[17,13,10]];
+  const BEN = [-50,-50,-46];
+  const WID = [12,10,8.4];
+
+  const fingers = FB.map((f,i)=>{
+    const segs=[];
+    for(let j=0;j<3;j++){
+      const o1 = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
+        "stroke-width":WID[j]+3.4,opacity:.85},back);
+      const f1 = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
+        "stroke-width":WID[j]},back);
+      segs.push({o1,f1});
+    }
+    const tipO = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
+      "stroke-width":WID[2]+3.4,opacity:.85},front);
+    const tipF = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
+      "stroke-width":WID[2]},front);
+    const nail = E("ellipse",{fill:dark,opacity:.55},front);
+    return {segs,tipO,tipF,nail,base:f};
+  });
+
+  const palm = E("path",{fill:skin,stroke:"#2A1A10","stroke-width":2.2,
+    "stroke-linejoin":"round",opacity:.98},front);
+  const shade = E("path",{fill:dark,opacity:.22},front);
+  const knuck = [0,1,2,3].map(()=>E("circle",{fill:dark,opacity:.30},front));
+  const tendon = [0,1,2].map(()=>E("path",{fill:"none",stroke:dark,
+    "stroke-width":1.3,opacity:.35,"stroke-linecap":"round"},front));
+
+  const thO = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
+    "stroke-width":18,opacity:.55},front);
+  const thF = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
+    "stroke-width":15},front);
+  const thT = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
+    "stroke-width":12.5},front);
+
+  const vLine = E("path",{fill:"none",stroke:"var(--gold)","stroke-width":2,
+    "stroke-linecap":"round","stroke-linejoin":"round",opacity:0},front);
+
+  const forearm = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
+    "stroke-width":30,opacity:.95},back);
+  const forearmO = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
+    "stroke-width":33,opacity:.5},back);
+
+  function update(st){
+    const curl = st.curl !== undefined ? st.curl : 1;
+    const squeeze = st.squeeze || 0;
+    fingers.forEach((fi,i)=>{
+      const pts = fingerPts(fi.base[0], fi.base[1], fi.base[2],
+        SEG[i], BEN, curl + squeeze*0.10);
+      for(let j=0;j<3;j++){
+        const seg = [pts[j], pts[j+1]];
+        A(fi.segs[j].o1,"points",P2(seg));
+        A(fi.segs[j].f1,"points",P2(seg));
+      }
+      const tip = [pts[2],pts[3]];
+      A(fi.tipO,"points",P2(tip));
+      A(fi.tipF,"points",P2(tip));
+      A(fi.nail,"cx",pts[3][0]); A(fi.nail,"cy",pts[3][1]);
+      A(fi.nail,"rx",3.8); A(fi.nail,"ry",3);
+      A(fi.nail,"opacity", o.glove ? 0 : .5);
+    });
+
+    A(palm,"d",
+      "M -20 -8 C -25 -28, -17 -46, -2 -53 C 11 -59, 26 -57, 33 -48 "+
+      "C 40 -39, 40 -19, 35 -2 C 30 15, 16 25, 2 23 C -11 21, -17 12, -20 -8 Z");
+    A(shade,"d","M 12 -50 C 26 -46, 34 -30, 32 -8 C 30 10, 20 20, 6 22 "+
+      "C 22 16, 30 2, 28 -14 C 26 -32, 20 -44, 12 -50 Z");
+    knuck.forEach((k,i)=>{
+      A(k,"cx",FB[i][0]+2); A(k,"cy",FB[i][1]+7);
+      A(k,"r", 5.2 + squeeze*1.2);
+      A(k,"opacity",(0.22 + squeeze*0.42).toFixed(2));
+      A(k,"fill", squeeze>0.55 ? "#FFFFFF" : dark);
+    });
+    tendon.forEach((t,i)=>{
+      const x0 = FB[i][0]+4, x1 = x0+3;
+      A(t,"d",`M ${x0} ${FB[i][1]+12} C ${x1} ${FB[i][1]+28}, ${x1+1} ${FB[i][1]+40}, ${x1} ${FB[i][1]+52}`);
+      A(t,"opacity",(0.20 + squeeze*0.35).toFixed(2));
+    });
+
+    const th = fingerPts(16, -10, -26, [29,20], [-12,-16], 1 + squeeze*0.3);
+    A(thO,"points",P2(th)); A(thF,"points",P2([th[0],th[1]]));
+    A(thT,"points",P2([th[1],th[2]]));
+
+    if(st.showV){
+      const a = th[2], b = [FB[0][0]-4, FB[0][1]+4];
+      const v = [[a[0],a[1]],[ (a[0]+b[0])/2 - 6, (a[1]+b[1])/2 + 14 ],[b[0],b[1]]];
+      A(vLine,"d",`M ${v[0][0]} ${v[0][1]} L ${v[1][0]} ${v[1][1]} L ${v[2][0]} ${v[2][1]}`);
+      A(vLine,"opacity",1);
+    } else A(vLine,"opacity",0);
+
+    const fa = [[16,16],[34,54]];
+    A(forearm,"points",P2(fa)); A(forearmO,"points",P2(fa));
+  }
+  return {g, update};
+}
+
+/** Escena: dos manos sobre el grip (vista del jugador). */
+function gripScene(opt){
+  return function(host){
+    host.innerHTML = "";
+    const svg = E("svg",{viewBox:"0 0 340 206","aria-hidden":"true"}, host);
+    const gRoot = E("g",{transform:"translate(178,112) scale(.74)"},svg);
+
+    const shaftG = E("g",{transform:"rotate(14)"},gRoot);
+    E("line",{x1:-40,y1:-150,x2:-40,y2:150,stroke:"#8E9BA2","stroke-width":9,
+      "stroke-linecap":"round"},shaftG);
+    E("line",{x1:-40,y1:-150,x2:-40,y2:-34,stroke:"#2B3338","stroke-width":15,
+      "stroke-linecap":"round"},shaftG);
+    E("line",{x1:-43,y1:-146,x2:-43,y2:-40,stroke:"rgba(255,255,255,.18)",
+      "stroke-width":3.5,"stroke-linecap":"round"},shaftG);
+    E("circle",{cx:-40,cy:-152,r:7,fill:"var(--gold)"},shaftG);
+    for(let i=0;i<7;i++) E("line",{x1:-48,y1:-130+i*13,x2:-32,y2:-126+i*13,
+      stroke:"rgba(255,255,255,.10)","stroke-width":1.6},shaftG);
+
+    const hUpper = handBack(shaftG, {glove:true});
+    const hLower = handBack(shaftG, {glove:false});
+    A(hUpper.g,"transform","translate(-24,-54) scale(.96)");
+    A(hLower.g,"transform","translate(-18,46) scale(.96)");
+
+    const gauge = E("g",null,svg);
+    const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
+    const t2 = E("text",{x:12,y:38,class:"ov-t"},svg);
+    let bar, fill, num;
+    if(opt.gauge){
+      E("rect",{x:290,y:36,width:34,height:132,rx:9,fill:"rgba(244,247,245,.08)"},gauge);
+      fill = E("rect",{x:290,width:34,rx:9,fill:"var(--gold)",opacity:.9},gauge);
+      num  = E("text",{x:307,y:26,class:"ov-g","text-anchor":"middle"},gauge);
+      E("text",{x:307,y:184,class:"ov-t","text-anchor":"middle"},gauge).textContent = "presión";
+    }
+    const target = opt.showV ? E("g",null,svg) : null;
+    let tDot, tLine, tTxt;
+    if(target){
+      tDot = E("circle",{cx:292,cy:52,r:7,fill:"var(--gold)"},target);
+      tTxt = E("text",{x:292,y:36,class:"ov-g","text-anchor":"middle"},target);
+      tTxt.textContent = "hombro atrás";
+      tLine = E("line",{stroke:"var(--gold)","stroke-width":1.4,
+        "stroke-dasharray":"4 4",opacity:.8},target);
+    }
+
+    function draw(t){
+      if(opt.gauge){
+        const w = 0.5 - 0.5*Math.cos(t*Math.PI*2);
+        const p = 4 + w*4;
+        const h = 132*(0.34 + w*0.66);
+        A(fill,"y", 36 + 132 - h); A(fill,"height", h.toFixed(1));
+        A(fill,"fill", p>6.4 ? "var(--red)" : "var(--gold)");
+        num.textContent = p.toFixed(1).replace(".",",");
+        hUpper.update({curl:1, squeeze:w});
+        hLower.update({curl:1, squeeze:w});
+        t1.textContent = p > 6.4 ? "Demasiado apretado" : "Presión de trabajo";
+        t2.textContent = p > 6.4 ? "La muñeca se bloquea" : "La muñeca articula libre";
+      } else if(opt.showV){
+        const u = t < .5 ? t*2 : (1-t)*2;
+        const e = u*u*(3-2*u);
+        const rot = -30 + e*30;
+        A(hUpper.g,"transform",`translate(-28,-46) rotate(${rot.toFixed(1)}) scale(.92)`);
+        A(hLower.g,"transform",`translate(-22,34) rotate(${(rot*0.8).toFixed(1)}) scale(.92)`);
+        hUpper.update({curl:1, squeeze:.15, showV:true});
+        hLower.update({curl:1, squeeze:.15, showV:true});
+        const ok = e > .72;
+        A(tLine,"x1",188);A(tLine,"y1",ok?72:118);A(tLine,"x2",284);A(tLine,"y2",54);
+        A(tLine,"opacity", ok?1:.25);
+        A(tDot,"fill", ok?"var(--gold)":"rgba(244,247,245,.3)");
+        t1.textContent = ok ? "V hacia el hombro de atrás" : "V hacia la barbilla";
+        t2.textContent = ok ? "Cara neutra" : "Grip débil: cara abierta";
+        A(t1,"fill", ok?"var(--gold)":"var(--red)");
+      } else if(opt.release){
+        const e = t;
+        const rot = -70 + e*170;
+        A(shaftG,"transform",`rotate(${rot.toFixed(1)})`);
+        hUpper.update({curl:1, squeeze:.2});
+        hLower.update({curl:1, squeeze:.2});
+        const st = rot < -18 ? ["Cara abierta","La puntera va retrasada"]
+                 : rot <  18 ? ["Cara cuadrada","Puntera y talón a la vez"]
+                             : ["Cara cerrada","La puntera adelanta al talón"];
+        t1.textContent = st[0]; t2.textContent = st[1];
+        A(t1,"fill", rot>-18 && rot<18 ? "var(--green)" : "var(--gold)");
+      }
+    }
+    return {host, dur: opt.dur || 4.2, draw};
+  };
+}
+
+/** Escena: mano abierta, palo en los dedos vs en la palma. */
+function fingersScene(){
+  return function(host){
+    host.innerHTML = "";
+    const svg = E("svg",{viewBox:"0 0 340 206","aria-hidden":"true"}, host);
+    const g = E("g",{transform:"translate(196,142) rotate(-12) scale(1.12)"},svg);
+
+    const fingersBack = E("g",null,g);
+    const palmG = E("g",null,g);
+    const clubG = E("g",null,g);
+    const fingersFront = E("g",null,g);
+
+    const BASES = [[-30,-44,-16],[-11,-50,-5],[8,-48,5],[25,-40,16]];
+    const SEGS  = [[22,16,12],[25,18,13],[23,17,12],[19,14,10]];
+    const WID   = [12.4,10.6,8.8];
+    const fs = BASES.map((b,i)=>{
+      const parts=[];
+      for(let j=0;j<3;j++){
+        parts.push({
+          o:E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
+            "stroke-width":WID[j]+3,opacity:.5},fingersBack),
+          f:E("polyline",{fill:"none",stroke:"var(--skin)","stroke-linecap":"round",
+            "stroke-width":WID[j]},fingersBack)
+        });
+      }
+      const crease = E("circle",{r:2,fill:"var(--skin-d)",opacity:.4},fingersBack);
+      return {parts,crease,b};
+    });
+
+    const palm = E("path",{fill:"var(--skin)",stroke:"#2A1A10","stroke-width":2.2,
+      "stroke-linejoin":"round"},palmG);
+    A(palm,"d","M -34 -44 C -40 -22, -38 2, -30 20 C -22 38, 4 42, 20 34 "+
+      "C 34 27, 38 6, 34 -14 C 31 -30, 28 -40, 24 -44 Z");
+    const heel = E("path",{fill:"var(--skin-s)",opacity:.45},palmG);
+    A(heel,"d","M -32 -8 C -26 10, -10 22, 8 20 C -6 26, -22 20, -30 6 Z");
+    const lifeline = E("path",{fill:"none",stroke:"var(--skin-d)","stroke-width":1.6,
+      opacity:.4,"stroke-linecap":"round"},palmG);
+    A(lifeline,"d","M -18 -40 C -24 -18, -22 4, -8 20");
+    const padLine = E("path",{fill:"none",stroke:"var(--skin-d)","stroke-width":1.4,
+      opacity:.35,"stroke-linecap":"round"},palmG);
+    A(padLine,"d","M -32 -34 C -14 -40, 8 -40, 26 -34");
+
+    const thO = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
+      "stroke-width":20,opacity:.5},palmG);
+    const thF = E("polyline",{fill:"none",stroke:"var(--skin)","stroke-linecap":"round",
+      "stroke-width":17},palmG);
+
+    const club = E("line",{stroke:"#8E9BA2","stroke-width":13,"stroke-linecap":"round"},clubG);
+    const clubHi = E("line",{stroke:"rgba(255,255,255,.2)","stroke-width":4,
+      "stroke-linecap":"round"},clubG);
+    const mark = E("path",{fill:"none",stroke:"var(--gold)","stroke-width":2.6,
+      "stroke-dasharray":"5 4","stroke-linecap":"round"},clubG);
+
+    const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
+    const t2 = E("text",{x:12,y:38,class:"ov-t"},svg);
+    const t3 = E("text",{x:328,y:192,class:"ov-t","text-anchor":"end"},svg);
+
+    function draw(t){
+      const u = t < .5 ? t*2 : (1-t)*2;
+      const e = u*u*(3-2*u);                 // 0 = palma (mal) → 1 = dedos (bien)
+      const curl = e*0.22;
+      fs.forEach((fi,i)=>{
+        const pts = fingerPts(fi.b[0], fi.b[1], fi.b[2], SEGS[i], [-18,-22,-20], curl);
+        for(let j=0;j<3;j++){
+          A(fi.parts[j].o,"points",P2([pts[j],pts[j+1]]));
+          A(fi.parts[j].f,"points",P2([pts[j],pts[j+1]]));
+        }
+        A(fi.crease,"cx",pts[1][0]); A(fi.crease,"cy",pts[1][1]);
+      });
+      const th = fingerPts(-34,-16,-74,[26,18],[-16,-18],1);
+      A(thO,"points",P2(th)); A(thF,"points",P2(th));
+
+      const y = 4 - e*42;                    // palma → base de los dedos
+      A(club,"x1",-52); A(club,"y1",y+10); A(club,"x2",44); A(club,"y2",y-10);
+      A(clubHi,"x1",-48); A(clubHi,"y1",y+6); A(clubHi,"x2",40); A(clubHi,"y2",y-13);
+      A(club,"stroke", e>.6 ? "#9AA7AE" : "#9AA7AE");
+      A(mark,"d",`M -52 ${y+22} L 44 ${y+2}`);
+      A(mark,"stroke", e>.6 ? "var(--green)" : "var(--red)");
+
+      t1.textContent = e > .6 ? "En la base de los dedos" : "En la palma";
+      A(t1,"fill", e>.6 ? "var(--green)" : "var(--red)");
+      t2.textContent = e > .6 ? "La muñeca articula, hay velocidad"
+                              : "Bisagra bloqueada, cara inestable";
+      t3.textContent = "Abre la mano · apoya · cierra";
+    }
+    return {host, dur:5, draw};
+  };
+}
+
+/* ===================================================================
+   DIAGRAMAS 2D
+   =================================================================== */
+function diagramScene(fn, dur){
+  return function(host){
+    host.innerHTML = "";
+    const svg = E("svg",{viewBox:"0 0 340 206","aria-hidden":"true"}, host);
+    const draw = fn(svg);
+    return {host, dur: dur || 5, draw};
+  };
+}
+const pp = t => { const u = t<.5 ? t*2 : (1-t)*2; return u*u*(3-2*u); };
+function shoe(parent, fill){
+  const e = E("path",{fill:fill||"#D8E2DB",stroke:"#06251b","stroke-width":1.6,
+    "stroke-linejoin":"round"},parent);
+  A(e,"d","M -13 -22 C -5 -27, 6 -26, 11 -19 C 15 -12, 15 6, 12 15 "+
+    "C 9 23, -8 24, -11 15 C -14 6, -16 -14, -13 -22 Z");
+  return e;
+}
+
+const DIAG = {
+  stance_width(svg){
+    E("line",{x1:14,y1:150,x2:326,y2:150,stroke:"rgba(244,247,245,.18)","stroke-width":2},svg);
+    const sh = E("line",{x1:108,y1:44,x2:232,y2:44,stroke:"var(--line)",
+      "stroke-width":3,"stroke-linecap":"round"},svg);
+    [108,232].forEach(x=>{
+      E("circle",{cx:x,cy:44,r:5,fill:"var(--gold)"},svg);
+      E("line",{x1:x,y1:50,x2:x,y2:144,stroke:"rgba(201,168,76,.35)",
+        "stroke-width":1.3,"stroke-dasharray":"4 4"},svg);
+    });
+    E("text",{x:170,y:30,class:"ov-t","text-anchor":"middle"},svg).textContent="ancho de hombros";
+    const gL = E("g",null,svg), gR = E("g",null,svg);
+    shoe(gL); shoe(gR);
+    const br = E("g",null,svg);
+    const brL = E("line",{stroke:"var(--gold)","stroke-width":2,"stroke-linecap":"round"},br);
+    const brA = E("line",{stroke:"var(--gold)","stroke-width":2,"stroke-linecap":"round"},br);
+    const brB = E("line",{stroke:"var(--gold)","stroke-width":2,"stroke-linecap":"round"},br);
+    const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
+    const t2 = E("text",{x:328,y:192,class:"ov-t","text-anchor":"end"},svg);
+    return t=>{
+      const e = pp(t);
+      const half = 24 + e*38;
+      A(gL,"transform",`translate(${170-half},128)`);
+      A(gR,"transform",`translate(${170+half},128)`);
+      [[brL,170-half-10,170+half+10,174],[brA,170-half-10,170-half-10,0],
+       [brB,170+half+10,170+half+10,0]].forEach(([el,x1,x2,y],i)=>{
+        if(i===0){A(el,"x1",x1);A(el,"x2",x2);A(el,"y1",174);A(el,"y2",174);}
+        else {A(el,"x1",x1);A(el,"x2",x2);A(el,"y1",168);A(el,"y2",180);}
+      });
+      t1.textContent = half>56 ? "Hierros medios · listo" : "Demasiado estrecho";
+      A(t1,"fill", half>56 ? "var(--gold)":"var(--muted)");
+      t2.textContent = "Driver: un pie más por fuera";
+    };
+  },
+
+  ball_position(svg){
+    E("line",{x1:14,y1:132,x2:326,y2:132,stroke:"rgba(244,247,245,.18)","stroke-width":2},svg);
+    const gL=E("g",null,svg), gR=E("g",null,svg);
+    shoe(gL); shoe(gR);
+    A(gL,"transform","translate(222,112) scale(.9)");
+    A(gR,"transform","translate(118,112) scale(.9)");
+    E("text",{x:118,y:166,class:"ov-t","text-anchor":"middle"},svg).textContent="atrás";
+    E("text",{x:222,y:166,class:"ov-t","text-anchor":"middle"},svg).textContent="adelante";
+    const guide = E("line",{stroke:"var(--gold)","stroke-width":1.3,
+      "stroke-dasharray":"4 4"},svg);
+    const ball = E("circle",{r:7,fill:"#fff",cy:92},svg);
+    const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
+    const t2 = E("text",{x:12,y:38,class:"ov-t"},svg);
+    const stops=[{x:170,n:"Wedge",d:"centro del stance"},
+                 {x:196,n:"Hierro medio",d:"dos dedos adelante"},
+                 {x:224,n:"Driver",d:"talón del pie delantero"}];
+    return t=>{
+      const i = Math.min(2, Math.floor(t*3));
+      const u = (t*3)%1, e = u*u*(3-2*u);
+      const a = stops[i], b = stops[Math.min(2,i+1)];
+      const x = a.x + (b.x-a.x)*e;
+      A(ball,"cx",x);
+      A(guide,"x1",x);A(guide,"y1",78);A(guide,"x2",x);A(guide,"y2",136);
+      t1.textContent = a.n; t2.textContent = a.d;
+    };
+  },
+
+  alignment_rails(svg){
+    E("circle",{cx:296,cy:40,r:7,fill:"var(--gold)"},svg);
+    E("line",{x1:296,y1:40,x2:296,y2:18,stroke:"var(--gold)","stroke-width":2},svg);
+    E("text",{x:296,y:66,class:"ov-g","text-anchor":"middle"},svg).textContent="objetivo";
+    const r1 = E("line",{stroke:"var(--gold)","stroke-width":2.6,"stroke-linecap":"round"},svg);
+    const r2 = E("line",{stroke:"var(--line)","stroke-width":2.6,"stroke-linecap":"round"},svg);
+    E("circle",{cx:160,cy:106,r:6,fill:"#fff"},svg);
+    const gL=E("g",null,svg), gR=E("g",null,svg);
+    shoe(gL,"#C9D6CE"); shoe(gR,"#C9D6CE");
+    const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
+    const t2 = E("text",{x:12,y:38,class:"ov-t"},svg);
+    return t=>{
+      const e = pp(t);
+      A(r1,"x1",46);A(r1,"y1",152);A(r1,"x2",288);A(r1,"y2",48);
+      const dy = (1-e)*26;
+      A(r2,"x1",32);A(r2,"y1",176);A(r2,"x2",274);A(r2,"y2",72-dy);
+      A(gL,"transform",`translate(190,${116-dy*0.6}) rotate(${-23+(1-e)*9}) scale(.78)`);
+      A(gR,"transform",`translate(126,${146-dy*0.4}) rotate(${-23+(1-e)*9}) scale(.78)`);
+      t1.textContent = e>.7 ? "Pies paralelos a la línea" : "Pies apuntando a bandera";
+      A(t1,"fill", e>.7?"var(--green)":"var(--red)");
+      t2.textContent = e>.7 ? "Carriles de tren: nunca se cruzan"
+                            : "Esto te obliga a compensar en el swing";
+    };
+  },
+
+  dispersion_cone(svg){
+    E("ellipse",{cx:214,cy:56,rx:70,ry:36,fill:"rgba(95,191,143,.16)",
+      stroke:"rgba(95,191,143,.5)","stroke-width":2},svg);
+    E("circle",{cx:156,cy:76,r:16,fill:"rgba(201,168,76,.20)",
+      stroke:"rgba(201,168,76,.5)","stroke-width":2},svg);
+    E("text",{x:156,y:106,class:"ov-t","text-anchor":"middle"},svg).textContent="bunker";
+    E("circle",{cx:246,cy:46,r:4,fill:"var(--gold)"},svg);
+    E("line",{x1:246,y1:46,x2:246,y2:26,stroke:"var(--gold)","stroke-width":2},svg);
+    E("text",{x:264,y:28,class:"ov-g"},svg).textContent="bandera";
+    E("circle",{cx:168,cy:182,r:5,fill:"#fff"},svg);
+    const cone = E("polygon",{"stroke-width":2},svg);
+    const drops = [0,1,2,3].map(()=>E("circle",{r:4,fill:"#fff",opacity:0},svg));
+    const aim = E("circle",{r:5,fill:"none","stroke-width":2,
+      "stroke-dasharray":"3 3"},svg);
+    const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
+    const t2 = E("text",{x:12,y:38,class:"ov-t"},svg);
+    return t=>{
+      const bad = t < .5;
+      if(bad){
+        A(cone,"points","168,182 96,56 246,46");
+        A(cone,"fill","rgba(224,103,91,.16)"); A(cone,"stroke","var(--red)");
+        A(aim,"cx",246);A(aim,"cy",46);A(aim,"stroke","var(--red)");
+        t1.textContent="Apuntas a bandera"; A(t1,"fill","var(--red)");
+        t2.textContent="Medio cono cae en el bunker";
+      } else {
+        A(cone,"points","168,182 176,52 272,66");
+        A(cone,"fill","rgba(201,168,76,.18)"); A(cone,"stroke","var(--gold)");
+        A(aim,"cx",224);A(aim,"cy",58);A(aim,"stroke","var(--gold)");
+        t1.textContent="Apuntas al lado seguro"; A(t1,"fill","var(--gold)");
+        t2.textContent="Todo el cono cae en green";
+      }
+      const pos = bad ? [[132,84],[180,58],[212,50],[150,74]]
+                      : [[200,62],[228,66],[248,58],[216,74]];
+      drops.forEach((d,i)=>{
+        const lt = (t%0.5)/0.5;
+        const on = lt > 0.25 + i*0.14;
+        A(d,"cx",pos[i][0]); A(d,"cy",pos[i][1]);
+        A(d,"opacity", on?1:0);
+        A(d,"fill", bad && i<2 ? "var(--red)" : "#fff");
+      });
+    };
+  },
+
+  pre_shot_routine(svg){
+    E("line",{x1:14,y1:112,x2:326,y2:112,stroke:"rgba(244,247,245,.16)","stroke-width":2},svg);
+    E("circle",{cx:252,cy:108,r:5,fill:"#fff"},svg);
+    E("line",{x1:236,y1:92,x2:272,y2:92,stroke:"var(--gold)","stroke-width":1.4,
+      "stroke-dasharray":"3 4"},svg);
+    E("text",{x:276,y:86,class:"ov-g"},svg).textContent="blanco a 1 m";
+    const walker = E("g",null,svg);
+    shoe(walker,"#C9D6CE");
+    const steps = [["1","Veo el golpe",48],["2","Elijo blanco",118],
+                   ["3","Monto setup",188],["4","Miro y pego",258]];
+    const nodes = steps.map(([n,lab,x])=>{
+      const g = E("g",null,svg);
+      const c = E("circle",{cx:x,cy:152,r:14,fill:"rgba(201,168,76,.14)",
+        stroke:"var(--gold)","stroke-width":2},g);
+      E("text",{x:x,y:157,class:"ov-g","text-anchor":"middle"},g).textContent=n;
+      const l = E("text",{x:x,y:180,class:"ov-t","text-anchor":"middle"},g);
+      l.textContent = lab;
+      return {g,c};
+    });
+    const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
+    const t2 = E("text",{x:12,y:38,class:"ov-t"},svg);
+    return t=>{
+      const i = Math.min(3, Math.floor(t*4));
+      nodes.forEach((n,j)=>{ A(n.g,"opacity", j===i ? 1 : .26); });
+      const x = 60 + i*62 + ((t*4)%1)*20;
+      A(walker,"transform",`translate(${x},86) scale(.62)`);
+      t1.textContent = "Rutina pre-golpe";
+      t2.textContent = ["Detrás de la bola, visualiza",
+                        "Un punto a un metro, en la línea",
+                        "Pies a la varilla imaginaria",
+                        "Una mirada y pega: sin pausas extra"][i];
+    };
+  }
+};
+
+/* ===================================================================
+   REGISTRO DE ESCENAS
+   =================================================================== */
+const SCENES = {
+  grip_pressure:  {label:"Presión 4 → 8 → 4 y lo que hace la muñeca",
+                   create: gripScene({gauge:true, dur:4.4}), still:.25},
+  grip_vs:        {label:"Las V giran hacia el hombro de atrás",
+                   create: gripScene({showV:true, dur:5}), still:.5},
+  grip_fingers:   {label:"Palma (mal) frente a base de los dedos (bien)",
+                   create: fingersScene(), still:.5},
+  release_face:   {label:"La cara rota: abierta · cuadrada · cerrada",
+                   create: gripScene({release:true, dur:4.6}), still:.5},
+
+  one_hand_chip:  {label:"Chip con la mano de abajo", still:.6,
+                   create: swingScene({cam:{az:-14,el:4,dist:250,fov:214,pivot:v3(0,86,-40)},
+                     range:[0.08,0.78], phiScale:.42, clubL:76, arm:"trail", dur:4.2})},
+  nine_to_three:  {label:"De las 9 a las 3, cuerpo y brazos juntos", still:.6,
+                   create: swingScene({cam:{az:-10,el:3,dist:300,fov:262},
+                     range:[0.06,0.82], clampPhi:92, overlay:"triangle", dur:4.6})},
+  takeaway_triangle:{label:"El triángulo se mueve en bloque", still:1,
+                   create: swingScene({cam:{az:-6,el:2,dist:290,fov:262},
+                     range:[0.06,0.26], pingpong:true, overlay:"triangle", dur:4.4})},
+  takeaway_path:  {label:"Por dentro y hacia arriba, no recto atrás", still:1,
+                   create: swingScene({cam:{az:-74,el:8,dist:300,fov:262},
+                     range:[0.06,0.30], pingpong:true, overlay:"path", dur:4.6})},
+  shoulder_turn:  {label:"90° de hombros sobre 45° de caderas", still:1,
+                   create: swingScene({cam:{az:-4,el:6,dist:290,fov:262},
+                     range:[0.05,0.43], pingpong:true, overlay:"turn", dur:5})},
+  wrist_set:      {label:"Ángulo antebrazo-palo a la altura de la cadera", still:1,
+                   create: swingScene({cam:{az:-72,el:6,dist:250,fov:212,pivot:v3(0,118,-40)},
+                     range:[0.06,0.40], pingpong:true, overlay:"wrist", dur:4.8})},
+  swing_plane:    {label:"El shaft apunta a la línea de bola", still:.38,
+                   create: swingScene({cam:{az:-78,el:7,dist:330,fov:240},
+                     overlay:"plane", dur:6})},
+  transition_sequence:{label:"Cadera · torso · brazos · palo", still:.52,
+                   create: swingScene({cam:{az:-8,el:4,dist:300,fov:262},
+                     range:[0.42,0.66], overlay:"bars", dur:4.2})},
+  weight_shift:   {label:"La presión viaja al pie delantero", still:.6,
+                   create: swingScene({cam:{az:0,el:5,dist:300,fov:262},
+                     range:[0.05,0.88], overlay:"pressure", dur:5.4})},
+  tempo_metronome:{label:"Ritmo 3:1 — tres arriba, uno abajo", still:.38,
+                   create: swingScene({cam:{az:-10,el:4,dist:310,fov:262},
+                     overlay:"beats", dur:5.6})},
+  shaft_lean:     {label:"Manos por delante de la cabeza del palo", still:1,
+                   create: swingScene({cam:{az:-70,el:6,dist:250,fov:250,pivot:v3(0,92,-26)},
+                     range:[0.548,0.586], pingpong:true, overlay:"lean", dur:4.4})},
+  low_point:      {label:"El punto bajo cae por delante de la bola", still:.62,
+                   create: swingScene({cam:{az:-76,el:10,dist:260,fov:252,pivot:v3(0,84,-26)},
+                     range:[0.46,0.76], overlay:"lowpoint", dur:4.8})},
+  finish_balance: {label:"Finish equilibrado, tres segundos", still:.9,
+                   create: swingScene({cam:{az:-2,el:4,dist:300,fov:262},
+                     range:[0.55,0.96], overlay:"balance", dur:5})},
+  posture_hinge:  {label:"Bisagra desde la cadera, columna larga", still:1,
+                   create: swingScene({cam:{az:-84,el:4,dist:280,fov:258},
+                     range:[0.0,0.0], pingpong:true, overlay:"hinge", dur:4.4,
+                     poseHinge:true})},
+
+  posture_profile:{label:"Perfil: hombros, manos y puntas alineados", still:1,
+                   create: swingScene({cam:{az:-90,el:1,dist:260,fov:242,pivot:v3(0,98,-30)},
+                     range:[0,0.04], pingpong:true, overlay:"profile", dur:4.2})},
+  spine_angle:    {label:"La inclinación de columna no cambia al girar", still:1,
+                   create: swingScene({cam:{az:-80,el:4,dist:300,fov:252},
+                     range:[0,0.42], pingpong:true, overlay:"hinge", dur:5})},
+  chest_turn_posture:{label:"Giro del pecho sin perder la postura", still:1,
+                   create: swingScene({cam:{az:-42,el:15,dist:290,fov:256},
+                     range:[0.02,0.40], pingpong:true, overlay:"turn", dur:5})},
+  setup_check:    {label:"Brazos colgando, manos bajo los hombros", still:1,
+                   create: swingScene({cam:{az:-72,el:6,dist:250,fov:234,pivot:v3(0,96,-26)},
+                     range:[0,0.05], pingpong:true, overlay:"lean", dur:4})},
+  top_position:   {label:"Posición arriba: shaft, manos y hombro", still:1,
+                   create: swingScene({cam:{az:-76,el:7,dist:320,fov:238},
+                     range:[0.34,0.44], pingpong:true, overlay:"plane", dur:4.6})},
+  half_swing:     {label:"Medio swing con amplitud controlada", still:.5,
+                   create: swingScene({cam:{az:-10,el:4,dist:300,fov:262},
+                     range:[0.10,0.78], clampPhi:112, overlay:"triangle", dur:4.8})},
+  pump_drill:     {label:"Bomba: la cadera baja, el ángulo se queda", still:.5,
+                   create: swingScene({cam:{az:-74,el:7,dist:300,fov:250},
+                     range:[0.40,0.53], pingpong:true, overlay:"wrist", dur:3.6})},
+  feet_together:  {label:"Pies juntos: sin balanceo lateral", still:.55,
+                   create: swingScene({cam:{az:-4,el:4,dist:300,fov:262},
+                     stance:9, overlay:"balance", dur:5.4})},
+  toe_up:         {label:"Puntera al cielo a la altura de la cadera", still:1,
+                   create: swingScene({cam:{az:-72,el:6,dist:250,fov:226,pivot:v3(0,102,-30)},
+                     range:[0.07,0.22], pingpong:true, overlay:"path", dur:4.2})},
+  extension:      {label:"Extensión completa a través de la bola", still:1,
+                   create: swingScene({cam:{az:-70,el:6,dist:290,fov:252},
+                     range:[0.60,0.75], pingpong:true, overlay:"turn", dur:4})},
+  hip_clear:      {label:"La cadera rota, no se desliza", still:.6,
+                   create: swingScene({cam:{az:-6,el:17,dist:300,fov:262},
+                     range:[0.42,0.68], overlay:"turn", dur:4.4})},
+  balance_hold:   {label:"Todo el peso sobre el pie delantero", still:.9,
+                   create: swingScene({cam:{az:-2,el:4,dist:300,fov:262},
+                     range:[0.72,0.96], overlay:"balance", dur:4.6})},
+
+  stance_width:   {label:"Pies bajo los hombros", create: diagramScene(DIAG.stance_width,4.6), still:1},
+  ball_position:  {label:"La bola avanza con el palo", create: diagramScene(DIAG.ball_position,6), still:.5},
+  alignment_rails:{label:"Carriles: pies paralelos, no a bandera", create: diagramScene(DIAG.alignment_rails,4.8), still:1},
+  dispersion_cone:{label:"Apunta al centro de tu dispersión real", create: diagramScene(DIAG.dispersion_cone,6.4), still:.75},
+  pre_shot_routine:{label:"Cuatro pasos, siempre en el mismo orden", create: diagramScene(DIAG.pre_shot_routine,6.4), still:.4}
+};
+/* ============ ALMACENAMIENTO Y UTILIDADES ============ */
+const PX = "caddie_";
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(PX+k); return v===null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(PX+k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(PX+k); }catch(e){} }
+};
+const getKey   = () => store.get("apikey", API_KEY_DEFAULT) || API_KEY_DEFAULT;
+const getModel = () => store.get("model", MODEL_DEFAULT) || MODEL_DEFAULT;
+const getHand  = () => store.get("hand","diestro") || "diestro";
+const getProgress = () => store.get("progress",{});
+const setDone = (id,v) => { const p=getProgress(); if(v) p[id]=Date.now(); else delete p[id]; store.set("progress",p); };
+const isDone  = id => !!getProgress()[id];
+
+const $  = (s,r) => (r||document).querySelector(s);
+const $$ = (s,r) => Array.from((r||document).querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function md(src){
+  const lines = esc(String(src||"").trim()).split(/\r?\n/);
+  let out="", inList=false;
+  const inline = t => t.replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")
+    .replace(/(^|\s)\*([^*\n]+)\*/g,"$1<i>$2</i>");
+  for(const raw of lines){
+    const line = raw.trim();
+    if(/^[-*•]\s+/.test(line) || /^\d+[.)]\s+/.test(line)){
+      if(!inList){ out+="<ul>"; inList=true; }
+      out += "<li>"+inline(line.replace(/^([-*•]|\d+[.)])\s+/,""))+"</li>";
+      continue;
+    }
+    if(inList){ out+="</ul>"; inList=false; }
+    if(!line) continue;
+    if(/^#{1,4}\s+/.test(line)){ out += "<p><b>"+inline(line.replace(/^#{1,4}\s+/,""))+"</b></p>"; continue; }
+    out += "<p>"+inline(line)+"</p>";
+  }
+  if(inList) out+="</ul>";
+  return out || "<p></p>";
+}
+
+const ICON = {
+  cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>',
+  lib:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+};
+
+function animBox(key){
+  const def = SCENES[key];
+  if(!def) return "";
+  const id = "sc"+(++uid);
+  return `<div class="animwrap">
+    <div class="animbox" id="${id}" data-scene="${key}"></div>
+    <div class="animctl">
+      <button class="ictl" data-play="${id}">${REDUCED?"▶ Play":"⏸ Pausa"}</button>
+      <button class="ictl" data-spd="${id}" data-v="1">1×</button>
+      <span class="animlabel">${esc(def.label)}</span>
+    </div>
+  </div>`;
+}
+
+/* ============ API ============ */
+class ApiError extends Error{}
+async function callClaude({system, messages, maxTokens}){
+  const key = getKey();
+  if(!key) throw new ApiError("NO_KEY");
+  let res;
+  try{
+    res = await fetch(API_URL,{
+      method:"POST",
+      headers:{"content-type":"application/json","x-api-key":key,
+        "anthropic-version":API_VERSION,
+        "anthropic-dangerous-direct-browser-access":"true"},
+      body: JSON.stringify({model:getModel(), max_tokens:maxTokens||1600, system, messages})
+    });
+  }catch(e){
+    throw new ApiError("No se pudo conectar con la API. Revisa la conexión y que tu clave permita llamadas desde el navegador.");
+  }
+  if(!res.ok){
+    let d="";
+    try{ const j=await res.json(); d=(j.error&&j.error.message)||JSON.stringify(j).slice(0,220); }
+    catch(e){ d=(await res.text()).slice(0,220); }
+    if(res.status===401) throw new ApiError("Clave API no válida (401). Revísala en Ajustes.");
+    if(res.status===429) throw new ApiError("Límite de peticiones (429). Espera unos segundos.");
+    if(res.status===413) throw new ApiError("El vídeo generó imágenes demasiado grandes. Graba un clip más corto.");
+    throw new ApiError("Error "+res.status+": "+d);
+  }
+  const data = await res.json();
+  const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+  return text || "(El coach no devolvió texto. Reintenta.)";
+}
+
+/* ============ VÍDEO → FOTOGRAMAS ============ */
+function loadVideo(file){
+  return new Promise((resolve,reject)=>{
+    const url = URL.createObjectURL(file);
+    const v = document.createElement("video");
+    v.preload="auto"; v.muted=true; v.playsInline=true;
+    v.setAttribute("playsinline",""); v.setAttribute("webkit-playsinline","");
+    const to = setTimeout(()=>{ URL.revokeObjectURL(url); reject(new Error("tiempo agotado al abrir el vídeo")); },15000);
+    v.addEventListener("error",()=>{ clearTimeout(to); URL.revokeObjectURL(url); reject(new Error("formato no soportado")); });
+    v.addEventListener("loadeddata",()=>{ clearTimeout(to); resolve({v,url}); },{once:true});
+    v.src = url; v.load();
+  });
+}
+function seekTo(v,t){
+  return new Promise(resolve=>{
+    let done=false;
+    const fin=()=>{ if(done) return; done=true; resolve(); };
+    const to=setTimeout(fin,2500);
+    v.addEventListener("seeked",()=>{ clearTimeout(to); fin(); },{once:true});
+    try{ v.currentTime = t; }catch(e){ clearTimeout(to); fin(); }
+  });
+}
+async function extractFrames(file,n){
+  n = n || FRAMES_PER_CLIP;
+  const {v,url} = await loadVideo(file);
+  const cv = $("#grabCanvas"), ctx = cv.getContext("2d");
+  const out = [];
+  try{
+    const dur = isFinite(v.duration) && v.duration>0 ? v.duration : 1;
+    const vw = v.videoWidth, vh = v.videoHeight;
+    if(!vw || !vh) throw new Error("el vídeo no expone dimensiones");
+    const scale = Math.min(1, 620/Math.max(vw,vh));
+    cv.width = Math.round(vw*scale); cv.height = Math.round(vh*scale);
+    for(let i=0;i<n;i++){
+      const t = Math.min(dur-0.05, dur*(i+0.5)/n);
+      if(t > 0.02) await seekTo(v,t);
+      ctx.drawImage(v,0,0,cv.width,cv.height);
+      const du = cv.toDataURL("image/jpeg",0.74);
+      out.push({dataUrl:du, b64:du.split(",")[1], mime:"image/jpeg"});
+    }
+  } finally { v.src=""; URL.revokeObjectURL(url); }
+  if(!out.length) throw new Error("no se pudo extraer ningún fotograma");
+  return out;
+}
+
+/* ============ PROMPTS ============ */
+function coachSystem(lesson){
+  const topic = lesson ? lesson.title : "swing completo (visión general)";
+  const ctx = lesson ? lesson.coach_context : "El alumno pregunta de forma general, sin una lección concreta abierta.";
+  return `Eres un instructor de golf certificado PGA con 20 años de experiencia entrenando a golfistas de nivel intermedio. Respondes SIEMPRE en español de España.
+
+El alumno lleva varios años practicando pero arrastra errores persistentes, lo que indica hábitos motores arraigados: no basta con explicarle la teoría, hay que darle una sensación concreta y un drill.
+El alumno es ${getHand()}: ajusta todas las referencias de lado en consecuencia.
+
+Lección actual: ${topic}.
+Contexto de la lección: ${ctx}
+
+Reglas:
+- Sé conciso: 120 palabras como máximo salvo que te pidan desarrollar.
+- Da UNA sola corrección accionable por respuesta. Si detectas varios problemas, prioriza el que esté más abajo en la cadena causal y menciona que el resto esperará.
+- Usa vocabulario técnico de golf, pero explica cada término la primera vez que lo uses.
+- Termina siempre con un drill concreto: nombre, repeticiones y la sensación que debe buscar.
+- NUNCA inventes datos de vuelo de bola, velocidad de palo, ángulo de ataque ni spin que el alumno no te haya dado. Si los necesitas, pregúntalos.
+- Si el alumno describe un síntoma ambiguo, haz una sola pregunta de diagnóstico antes de corregir.
+- Formato: texto plano con **negritas** y listas con guiones.`;
+}
+
+function drillSystem(lesson, drill, n){
+  return `Eres un instructor de golf certificado PGA con 20 años de experiencia. Respondes SIEMPRE en español de España.
+
+Recibes ${n} FOTOGRAMAS extraídos en orden cronológico de un vídeo corto que el alumno acaba de grabar. Tu único trabajo es decidir si está ejecutando BIEN ESTE EJERCICIO CONCRETO, nada más.
+
+Ejercicio: "${drill.name}" (${drill.reps})
+Lección: ${lesson.title}
+Instrucción que se le dio: ${drill.cue.replace(/\*\*/g,"")}
+Puntos de control que debes verificar: ${drill.check}
+Errores típicos de esta fase: ${lesson.common_mistakes.join("; ")}
+El alumno es ${getHand()}.
+
+Reglas innegociables:
+- Juzga SOLO lo que se ve en los fotogramas. Si el encuadre, la distancia o el desenfoque no permiten verificar un punto de control, dilo explícitamente en vez de suponerlo.
+- Los fotogramas son instantes sueltos, no vídeo continuo: no afirmes nada sobre velocidad, ritmo ni secuencia temporal salvo que la diferencia entre fotogramas lo demuestre.
+- NUNCA inventes datos de vuelo de bola, velocidad, spin ni ángulos medidos.
+- No cambies de ejercicio ni metas correcciones de otras fases del swing. Si ves algo grave fuera de alcance, menciónalo en una sola frase al final de "Qué veo".
+- El alumno lleva años practicando: asume hábitos arraigados y sé directo.
+
+Devuelve EXACTAMENTE estas cuatro secciones con estos encabezados literales:
+
+## Veredicto
+Una sola línea que empiece por una de estas tres palabras exactas: CORRECTO, CASI o CORREGIR. Después, dos puntos y un resumen de máximo 12 palabras.
+
+## Qué veo
+Punto de control por punto de control, con guiones: di si se cumple, no se cumple o no se puede verificar, y en qué fotograma lo ves.
+
+## Corrección
+UNA sola corrección, la más importante. Si el veredicto es CORRECTO, escribe qué afinar para subir el nivel.
+
+## Cómo repetirlo
+Repeticiones concretas y la sensación a buscar en la próxima serie. Máximo tres líneas.`;
+}
+
+const ANALYZER_SYSTEM = `Eres un instructor de golf certificado PGA con 20 años de experiencia analizando swings de golfistas intermedios. Respondes SIEMPRE en español de España.
+
+Recibes varios FOTOGRAMAS en orden cronológico extraídos de un vídeo del swing del alumno, más su descripción escrita.
+
+Reglas innegociables:
+- Analiza SOLO lo que se ve en las imágenes y lo que el alumno escribe. Si un fotograma está borroso o mal encuadrado, dilo en vez de suponer.
+- Di a qué fase del swing corresponde cada fotograma que uses como prueba.
+- NUNCA inventes datos de vuelo de bola, velocidad, spin, ángulo de ataque ni dispersión que el alumno no haya dado.
+- El alumno tiene años de práctica: prioriza el error que esté más abajo en la cadena causal.
+
+Devuelve EXACTAMENTE estas tres secciones con estos encabezados literales:
+
+## Lo que se ve bien
+## Errores clave
+## Drill para corregirlo`;
+
+const analyzerPrefill = () =>
+`Palo usado: \nVuelo de bola habitual con este palo: \nQué siento durante el swing: \nQué llevo años intentando corregir sin éxito: \nMi hándicap aproximado: `;
+
+/* ============ RENDER DE FEEDBACK ============ */
+const FB_DEFS = [
+  {re:/lo que se ve bien/i, cls:"ok",   icon:"✅"},
+  {re:/errores? clave/i,    cls:"warn", icon:"⚠️"},
+  {re:/qu[eé] veo/i,        cls:"info", icon:"👁"},
+  {re:/correcci[oó]n/i,     cls:"warn", icon:"⚠️"},
+  {re:/c[oó]mo repetirlo/i, cls:"fix",  icon:"🔁"},
+  {re:/drill/i,             cls:"fix",  icon:"🎯"}
+];
+function renderFeedback(text){
+  const parts = String(text).split(/^\s*#{1,4}\s*/m).map(s=>s.trim()).filter(Boolean);
+  let html="", matched=0;
+  for(const p of parts){
+    const nl = p.indexOf("\n");
+    const head = (nl===-1?p:p.slice(0,nl)).trim();
+    const body = (nl===-1?"":p.slice(nl+1)).trim();
+    if(/veredicto/i.test(head)){
+      const v = body.toUpperCase();
+      const cls = /^CORRECTO/.test(v) ? "v-ok" : /^CASI/.test(v) ? "v-mid" : "v-bad";
+      html += `<div class="verdict ${cls}"><span class="vdot"></span><span>${esc(body)}</span></div>`;
+      matched++; continue;
+    }
+    const def = FB_DEFS.find(d=>d.re.test(head));
+    if(def && body){
+      html += `<div class="fb-sec ${def.cls}"><h4>${def.icon} ${esc(head)}</h4><div class="body">${md(body)}</div></div>`;
+      matched++;
+    }
+  }
+  if(!matched) return `<div class="fb-sec fix"><h4>🎯 Análisis del coach</h4><div class="body">${md(text)}</div></div>`;
+  return html;
+}
+
+/* ============ VÍDEO POR EJERCICIO ============ */
+let pendingPick = null;
+function pickVideo(kind, handler){
+  pendingPick = handler;
+  $(kind==="cam" ? "#fileCam" : "#fileLib").click();
+}
+["#fileCam","#fileLib"].forEach(sel=>{
+  $(sel).addEventListener("change", e=>{
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    const h = pendingPick; pendingPick = null;
+    if(f && h) h(f);
+  });
+});
+
+const drillRef = new Map();
+function drillCheckBlock(lesson, drill, key){
+  drillRef.set(key,{lesson,drill});
+  return `<div class="dcheck" id="dc-${key}">
+    <div class="dcheck-h">${ICON.cam} ¿Lo estoy haciendo bien?</div>
+    <div class="dcheck-btns">
+      <button class="btn btn-ghost btn-sm" data-dc="${key}" data-src="cam">${ICON.cam} Grabar</button>
+      <button class="btn btn-ghost btn-sm" data-dc="${key}" data-src="lib">${ICON.lib} Galería</button>
+    </div>
+    <div class="dc-out"></div>
+  </div>`;
+}
+function runDrillCheck(key, src){
+  const ref = drillRef.get(key);
+  const box = $("#dc-"+key);
+  if(!ref || !box) return;
+  if(!getKey()){ openSettings(true); return; }
+  const out = $(".dc-out", box);
+  pickVideo(src, async file=>{
+    out.innerHTML = `<div class="note" style="margin-top:10px">Extrayendo fotogramas…</div>`;
+    let fr;
+    try{ fr = await extractFrames(file); }
+    catch(err){
+      out.innerHTML = `<div class="err" style="margin-top:10px">No se pudo leer el vídeo (${esc(err.message||"error")}). Prueba con un clip más corto o en formato estándar.</div>`;
+      return;
+    }
+    const strip = `<div class="strip">${fr.map((f,i)=>`<img src="${f.dataUrl}" alt="Fotograma ${i+1}">`).join("")}</div>`;
+    out.innerHTML = strip + `<div class="note" style="margin-top:10px"><span class="typing" style="display:inline-flex;vertical-align:middle;margin-right:8px"><i></i><i></i><i></i></span>El coach está revisando tu ejecución.</div>`;
+    const content = fr.map(f=>({type:"image",source:{type:"base64",media_type:f.mime,data:f.b64}}));
+    content.push({type:"text", text:
+`Estos son ${fr.length} fotogramas en orden cronológico de mi ejecución del ejercicio "${ref.drill.name}".
+Dime si lo estoy haciendo bien según los puntos de control, con las cuatro secciones indicadas.`});
+    try{
+      const reply = await callClaude({system: drillSystem(ref.lesson, ref.drill, fr.length),
+        messages:[{role:"user", content}], maxTokens:1500});
+      out.innerHTML = strip + renderFeedback(reply);
+    }catch(e){
+      out.innerHTML = strip + `<div class="err" style="margin-top:10px">${esc(
+        e.message==="NO_KEY" ? "Falta la clave API. Ábrela en Ajustes." : e.message)}</div>`;
+    }
+  });
+}
+/* ============ VISTAS ============ */
+const view = $("#view");
+let currentTab = "curso", openLessonId = null;
+
+function setTab(tab){
+  currentTab = tab;
+  $$(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===tab)));
+  render(); window.scrollTo(0,0); updateFab();
+}
+function render(){
+  if(currentTab==="curso") view.innerHTML = viewCurso();
+  else if(currentTab==="analizador") view.innerHTML = viewAnalizador();
+  else if(currentTab==="coach") view.innerHTML = viewCoachTab();
+  else view.innerHTML = viewProgreso();
+  mountScenes(view);
+  if(currentTab==="analizador") bindAnalyzer();
+  if(currentTab==="progreso") bindProgreso();
+}
+function viewCurso(){
+  const p = getProgress();
+  const done = LESSONS.filter(l=>p[l.id]).length;
+  return `<div class="page-head">
+    <h1 class="page-title">Tu programa</h1>
+    <p class="page-sub">${LESSONS.length} lecciones, del grip a la estrategia. ${done} completada${done===1?"":"s"}.</p>
+  </div>
+  <div class="timeline">${LESSONS.map(l=>`
+    <button class="tl-item ${p[l.id]?"done":""}" data-lesson="${l.id}">
+      <span class="tl-node">${p[l.id]?ICON.check:l.id}</span>
+      <span class="tl-phase">${esc(l.phase)}</span>
+      <span class="tl-title">${esc(l.title)}</span>
+      <span class="tl-meta">${l.drills_no_ball.length} drills sin bola · ${l.drills_with_ball.length} con bola</span>
+    </button>`).join("")}</div>
+  <div class="note" style="margin-top:8px">Cada ejercicio lleva su propio botón de vídeo: grábate haciéndolo y el coach te dice si lo ejecutas bien.</div>`;
+}
+function viewAnalizador(){
+  return `<div class="page-head">
+    <h1 class="page-title">Analizador de swing</h1>
+    <p class="page-sub">Graba o elige un vídeo. Extraemos ${FRAMES_PER_CLIP} fotogramas del movimiento y el coach los analiza con tu descripción.</p>
+  </div>
+  <div class="dcheck-btns">
+    <button class="btn" id="anCam">${ICON.cam} Grabar</button>
+    <button class="btn btn-ghost" id="anLib">${ICON.lib} Galería</button>
+  </div>
+  <div id="frameWrap" style="margin-top:14px"></div>
+  <div class="sec-label">Cuéntale al coach</div>
+  <label class="sr" for="taCtx">Descripción del swing</label>
+  <textarea class="ta" id="taCtx">${esc(analyzerPrefill())}</textarea>
+  <div style="margin-top:14px"><button class="btn" id="btnAnalyze">Analizar swing</button></div>
+  <div id="fbWrap" style="margin-top:14px"></div>`;
+}
+function viewCoachTab(){
+  return `<div class="page-head">
+    <h1 class="page-title">Coach</h1>
+    <p class="page-sub">Pregunta sobre cualquier lección o abre una conversación general.</p>
+  </div>
+  <button class="btn" data-chat="general">Conversación general</button>
+  <div class="sec-label">Por lección</div>
+  ${LESSONS.map(l=>`<button class="pg-row" data-chat="${l.id}">
+      <span class="pg-check">${isDone(l.id)?ICON.check:""}</span>
+      <span class="pg-name">${esc(l.title)}</span>
+      <span class="pg-n">${(store.get("chat_"+l.id,[]).length)||0} msj</span>
+    </button>`).join("")}
+  <div class="note" style="margin-top:18px">El coach responde con una sola corrección por mensaje, a propósito. Un cambio a la vez es lo que rompe un hábito de años.</div>`;
+}
+function viewProgreso(){
+  const p = getProgress();
+  const done = LESSONS.filter(l=>p[l.id]).length;
+  const pct = Math.round(done/LESSONS.length*100);
+  const C = 2*Math.PI*45;
+  const nb = LESSONS.reduce((a,l)=>a+l.drills_no_ball.length,0);
+  const wb = LESSONS.reduce((a,l)=>a+l.drills_with_ball.length,0);
+  return `<div class="page-head">
+    <h1 class="page-title">Progreso</h1>
+    <p class="page-sub">Marca una lección cuando hayas hecho sus drills al menos tres sesiones.</p>
+  </div>
+  <div class="ring-wrap">
+    <svg class="ring" viewBox="0 0 100 100">
+      <circle class="bgc" cx="50" cy="50" r="45"/>
+      <circle class="fgc" cx="50" cy="50" r="45" stroke-dasharray="${C.toFixed(1)}"
+        stroke-dashoffset="${(C*(1-done/LESSONS.length)).toFixed(1)}" transform="rotate(-90 50 50)"/>
+    </svg>
+    <div><div class="ring-num">${pct}%</div>
+      <div class="ring-lab">${done} de ${LESSONS.length} lecciones</div>
+      <div class="ring-lab" style="color:var(--muted-2)">${nb} drills sin bola · ${wb} con bola</div></div>
+  </div>
+  <div class="sec-label">Lecciones</div>
+  ${LESSONS.map(l=>`<button class="pg-row ${p[l.id]?"done":""}" data-toggle="${l.id}">
+      <span class="pg-check">${p[l.id]?ICON.check:""}</span>
+      <span class="pg-name">${esc(l.title)}</span>
+      <span class="pg-n">${p[l.id]?new Date(p[l.id]).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}):"—"}</span>
+    </button>`).join("")}
+  <div class="note" style="margin-top:20px">Un error arraigado tarda entre 3 y 6 semanas de repetición deliberada en reescribirse. Antes de eso los resultados pueden empeorar: es normal.</div>`;
+}
+function bindProgreso(){
+  $$("[data-toggle]").forEach(b=>b.addEventListener("click",()=>{
+    setDone(+b.dataset.toggle, !isDone(+b.dataset.toggle)); render();
+  }));
+}
+
+/* ============ DETALLE DE LECCIÓN ============ */
+const sheet = $("#lessonSheet");
+function openLesson(id){
+  const l = LESSONS.find(x=>x.id===id);
+  if(!l) return;
+  openLessonId = id;
+  $("#sheetTitle").textContent = l.title;
+  $("#sheetBody").innerHTML = lessonHTML(l);
+  mountScenes($("#sheetBody"));
+  sheet.classList.add("open"); sheet.setAttribute("aria-hidden","false");
+  sheet.scrollTop = 0; document.body.style.overflow = "hidden";
+  updateFab();
+}
+function closeLesson(){
+  sheet.classList.remove("open"); sheet.setAttribute("aria-hidden","true");
+  openLessonId = null; document.body.style.overflow = "";
+  render(); updateFab();
+}
+function lessonHTML(l){
+  const total = l.drills_no_ball.length + l.drills_with_ball.length;
+  const idxList = (arr,kind,titulo,desde) => `<div class="idx-h">${titulo}</div>` +
+    arr.map((d,i)=>`<button class="idx-i" data-goto="${l.id}${kind}${i}">
+      <i>${desde+i+1}</i><span>${esc(d.name)}</span><em>${esc(d.reps)}</em></button>`).join("");
+  const drill = (d,kind,i)=>{
+    const key = `${l.id}${kind}${i}`;
+    return `<div class="drill" id="d-${key}">
+      <div class="drill-top"><div class="drill-name">${esc(d.name)}</div>
+        <div class="drill-reps">${esc(d.reps)}</div></div>
+      <div class="drill-cue">${md(d.cue).replace(/^<p>|<\/p>$/g,"")}</div>
+      ${animBox(d.animation)}
+      ${drillCheckBlock(l,d,key)}
+    </div>`;
+  };
+  return `<div class="lesson-hero">
+    <div class="lesson-kicker">Lección ${l.id} · ${esc(l.phase)}</div>
+    <h1 class="lesson-h1">${esc(l.title)}</h1>
+    <p class="lesson-goal">${esc(l.goal)}</p>
+  </div>
+  <details class="idx">
+    <summary>${total} ejercicios · ${l.drills_no_ball.length} sin bola, ${l.drills_with_ball.length} con bola</summary>
+    <div class="idx-body">
+      ${idxList(l.drills_no_ball,"n","Sin bola",0)}
+      ${idxList(l.drills_with_ball,"b","Con bola",l.drills_no_ball.length)}
+    </div>
+  </details>
+  <div class="sec-label">Teoría</div>
+  <ol class="theory">${l.theory.map(t=>`<li>${esc(t)}</li>`).join("")}</ol>
+  <div class="sec-label">Drills sin bola · sensación y memoria muscular</div>
+  ${l.drills_no_ball.map((d,i)=>drill(d,"n",i)).join("")}
+  <div class="sec-label">Drills con bola · aplicación</div>
+  ${l.drills_with_ball.map((d,i)=>drill(d,"b",i)).join("")}
+  <div class="sec-label">Errores frecuentes en esta fase</div>
+  <ul class="mistakes">${l.common_mistakes.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>
+  <hr class="hr">
+  <button class="btn ${isDone(l.id)?"btn-done":""}" data-complete="${l.id}">
+    ${isDone(l.id)? ICON.check+" Lección completada" : "Marcar como completada"}</button>
+  <p style="font-size:13px;color:var(--muted-2);margin-top:10px;text-align:center">
+    ${l.id < LESSONS.length ? "Siguiente: "+esc(LESSONS[l.id].title) : "Última lección del programa"}</p>`;
+}
+
+/* ============ CHAT ============ */
+const chat = $("#chat"), chatLog = $("#chatLog"), chatInput = $("#chatInput");
+let chatLesson = null, chatBusy = false;
+const chatKey = () => "chat_" + (chatLesson ? chatLesson.id : "general");
+const getHistory = () => store.get(chatKey(), []);
+const saveHistory = h => store.set(chatKey(), h.slice(-40));
+
+function openChat(l){
+  chatLesson = l;
+  $("#chatTitle").textContent = "Coach PGA";
+  $("#chatCtx").textContent = l ? ("Lección "+l.id+" · "+l.title) : "Contexto general";
+  paintChat();
+  chat.classList.add("open"); chat.setAttribute("aria-hidden","false");
+  updateFab(); setTimeout(()=>chatInput.focus(),320);
+}
+function closeChat(){
+  chat.classList.remove("open"); chat.setAttribute("aria-hidden","true"); updateFab();
+}
+function paintChat(){
+  const h = getHistory();
+  if(!h.length){
+    const t = chatLesson ? chatLesson.title : "tu swing en general";
+    chatLog.innerHTML = `<div class="msg a"><div>${md(
+`Hola. Soy tu coach para **${t}**.
+
+Cuéntame qué pasa con la bola y qué sientes en el swing. Cuanto más concreto seas, más útil será la corrección.
+
+Ejemplos: *"se me va a la derecha con driver pero no con hierros"*, *"doy gordo con hierros largos"*, *"siento que llego tarde al impacto"*.`)}</div></div>`;
+  } else {
+    chatLog.innerHTML = h.map(m=> m.role==="user"
+      ? `<div class="msg u"><div>${esc(m.content)}</div></div>`
+      : `<div class="msg a"><div>${md(m.content)}</div></div>`).join("");
+  }
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+async function sendChat(){
+  const text = chatInput.value.trim();
+  if(!text || chatBusy) return;
+  if(!getKey()){ openSettings(true); return; }
+  const h = getHistory();
+  h.push({role:"user", content:text}); saveHistory(h);
+  chatInput.value=""; chatInput.style.height="auto";
+  paintChat();
+  chatBusy = true; $("#chatSend").disabled = true;
+  chatLog.insertAdjacentHTML("beforeend",
+    `<div class="msg a" id="typing"><div><div class="typing"><i></i><i></i><i></i></div></div></div>`);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  try{
+    const reply = await callClaude({system: coachSystem(chatLesson),
+      messages: h.map(m=>({role:m.role, content:m.content})), maxTokens:1200});
+    const h2 = getHistory(); h2.push({role:"assistant", content:reply}); saveHistory(h2);
+    paintChat();
+  }catch(e){
+    const el = $("#typing");
+    const msg = e.message==="NO_KEY" ? "Falta la clave API. Ábrela en el icono de ajustes." : e.message;
+    if(el) el.outerHTML = `<div class="msg a"><div class="err" style="border-radius:8px">${esc(msg)}</div></div>`;
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }finally{
+    const t = $("#typing"); if(t) t.remove();
+    chatBusy = false; $("#chatSend").disabled = false;
+  }
+}
+function updateFab(){
+  $("#fab").classList.toggle("show",
+    sheet.classList.contains("open") && !chat.classList.contains("open"));
+}
+
+/* ============ ANALIZADOR GENERAL ============ */
+let frames = null;
+function bindAnalyzer(){
+  $("#anCam").addEventListener("click",()=>grabForAnalyzer("cam"));
+  $("#anLib").addEventListener("click",()=>grabForAnalyzer("lib"));
+  $("#btnAnalyze").addEventListener("click", runAnalysis);
+  paintFrames();
+}
+function paintFrames(){
+  const w = $("#frameWrap");
+  if(!w) return;
+  w.innerHTML = frames
+    ? `<div class="strip">${frames.map((f,i)=>`<img src="${f.dataUrl}" alt="Fotograma ${i+1}">`).join("")}</div>
+       <p style="font-size:12.5px;color:var(--muted-2);margin-top:6px">${frames.length} fotogramas del movimiento</p>`
+    : "";
+}
+function grabForAnalyzer(src){
+  pickVideo(src, async file=>{
+    const w = $("#frameWrap");
+    if(w) w.innerHTML = `<div class="note">Extrayendo fotogramas…</div>`;
+    try{ frames = await extractFrames(file); paintFrames(); }
+    catch(err){
+      frames = null;
+      if(w) w.innerHTML = `<div class="err">No se pudo leer el vídeo (${esc(err.message||"error")}). Puedes analizar solo con la descripción escrita.</div>`;
+    }
+  });
+}
+async function runAnalysis(){
+  const btn = $("#btnAnalyze"), out = $("#fbWrap");
+  const desc = ($("#taCtx").value||"").trim();
+  if(!getKey()){ openSettings(true); return; }
+  if(!frames && desc.length < 25){
+    out.innerHTML = `<div class="err">Sube un vídeo o describe tu swing con algo más de detalle.</div>`;
+    return;
+  }
+  btn.disabled = true; btn.textContent = "Analizando…";
+  out.innerHTML = `<div class="note"><span class="typing" style="display:inline-flex;vertical-align:middle;margin-right:8px"><i></i><i></i><i></i></span>El coach está mirando tu swing.</div>`;
+  const content = [];
+  if(frames) frames.forEach(f=>content.push({type:"image",
+    source:{type:"base64", media_type:f.mime, data:f.b64}}));
+  content.push({type:"text", text:
+`Soy un golfista ${getHand()} de nivel intermedio con varios años de práctica y errores que no consigo corregir.
+${frames ? `Arriba tienes ${frames.length} fotogramas en orden cronológico de mi swing.` : "No he podido adjuntar imágenes; analiza solo mi descripción y dilo explícitamente."}
+
+Mi descripción:
+${desc || "(sin descripción)"}
+
+Analiza y responde con las tres secciones indicadas.`});
+  try{
+    const reply = await callClaude({system:ANALYZER_SYSTEM,
+      messages:[{role:"user", content}], maxTokens:2000});
+    out.innerHTML = renderFeedback(reply);
+  }catch(e){
+    out.innerHTML = `<div class="err">${esc(e.message==="NO_KEY"
+      ? "Falta la clave API. Ábrela en el icono de ajustes." : e.message)}</div>`;
+  }finally{
+    btn.disabled = false; btn.textContent = "Analizar swing";
+  }
+}
+
+/* ============ AJUSTES ============ */
+const settings = $("#settings");
+function openSettings(noKey){
+  $("#inKey").value = getKey(); $("#inModel").value = getModel(); $("#inHand").value = getHand();
+  settings.classList.add("open"); settings.setAttribute("aria-hidden","false");
+  if(noKey){
+    const s = $("#inKey").closest(".field").querySelector("small");
+    s.style.color = "var(--red)";
+    s.textContent = "Necesitas una clave API para el coach y el análisis de vídeo. Pégala aquí.";
+  }
+}
+function closeSettings(){ settings.classList.remove("open"); settings.setAttribute("aria-hidden","true"); }
+$("#btnSettings").addEventListener("click",()=>openSettings(false));
+$("#setClose").addEventListener("click",closeSettings);
+settings.addEventListener("click",e=>{ if(e.target===settings) closeSettings(); });
+$("#setSave").addEventListener("click",()=>{
+  store.set("apikey",$("#inKey").value.trim());
+  store.set("model",$("#inModel").value.trim()||MODEL_DEFAULT);
+  store.set("hand",$("#inHand").value.trim().toLowerCase()==="zurdo"?"zurdo":"diestro");
+  closeSettings(); render();
+});
+$("#setReset").addEventListener("click",()=>{
+  if(!confirm("¿Borrar el progreso y las conversaciones? La clave API se conserva.")) return;
+  store.del("progress");
+  LESSONS.forEach(l=>store.del("chat_"+l.id));
+  store.del("chat_general");
+  closeSettings(); render();
+});
+
+/* ============ EVENTOS ============ */
+$$(".tab").forEach(b=>b.addEventListener("click",()=>{
+  if(sheet.classList.contains("open")) closeLesson();
+  if(chat.classList.contains("open")) closeChat();
+  setTab(b.dataset.tab);
+}));
+document.addEventListener("click", e=>{
+  const l = e.target.closest("[data-lesson]");
+  if(l){ openLesson(+l.dataset.lesson); return; }
+  const c = e.target.closest("[data-chat]");
+  if(c){ const v=c.dataset.chat; openChat(v==="general"?null:LESSONS.find(x=>x.id===+v)); return; }
+  const dc = e.target.closest("[data-dc]");
+  if(dc){ runDrillCheck(dc.dataset.dc, dc.dataset.src); return; }
+  const go = e.target.closest("[data-goto]");
+  if(go){
+    const t = document.getElementById("d-"+go.dataset.goto);
+    const idx = go.closest("details"); if(idx) idx.open = false;
+    // leer la geometría tras cerrar el índice fuerza el recálculo de layout,
+    // así no hace falta esperar a un frame. Salto directo: con lecciones de
+    // miles de píxeles el desplazamiento suavizado tarda demasiado.
+    if(t){
+      const sc = t.closest(".sheet");
+      sc.scrollTop = sc.scrollTop + t.getBoundingClientRect().top - 62;
+    }
+    return;
+  }
+  const comp = e.target.closest("[data-complete]");
+  if(comp){
+    const id = +comp.dataset.complete;
+    setDone(id, !isDone(id));
+    comp.className = "btn" + (isDone(id)?" btn-done":"");
+    comp.innerHTML = isDone(id) ? ICON.check+" Lección completada" : "Marcar como completada";
+    return;
+  }
+  const play = e.target.closest("[data-play]");
+  if(play){
+    const s = scenes.get(play.dataset.play);
+    if(s){ s.paused = !s.paused; s.dirty = true;
+      play.textContent = s.paused ? "▶ Play" : "⏸ Pausa"; }
+    return;
+  }
+  const spd = e.target.closest("[data-spd]");
+  if(spd){
+    const order = ["0.5","1","2"];
+    const next = order[(order.indexOf(spd.dataset.v)+1)%order.length];
+    spd.dataset.v = next;
+    spd.textContent = next.replace(".",",")+"×";
+    const s = scenes.get(spd.dataset.spd);
+    if(s) s.speed = parseFloat(next);
+    return;
+  }
+});
+$("#btnBack").addEventListener("click", closeLesson);
+$("#fab").addEventListener("click",()=>openChat(LESSONS.find(l=>l.id===openLessonId)||null));
+$("#chatClose").addEventListener("click", closeChat);
+$("#chatClear").addEventListener("click",()=>{
+  if(!confirm("¿Borrar esta conversación?")) return;
+  store.del(chatKey()); paintChat();
+});
+$("#chatSend").addEventListener("click", sendChat);
+chatInput.addEventListener("input",()=>{
+  chatInput.style.height="auto";
+  chatInput.style.height=Math.min(chatInput.scrollHeight,110)+"px";
+});
+chatInput.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); sendChat(); }
+});
+
+setTab("curso");
+if(!getKey()){
+  setTimeout(()=>{
+    const h = $(".page-head");
+    if(h) h.insertAdjacentHTML("afterend",
+      `<div class="note" style="margin-bottom:6px">Para el <b>coach</b> y el <b>análisis de vídeo</b>, añade tu clave API de Anthropic en ⚙︎. Las lecciones y animaciones funcionan sin clave.</div>`);
+  },400);
+}
+
+</script>
+</body>
+</html>
