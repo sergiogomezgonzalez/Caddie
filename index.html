@@ -171,8 +171,23 @@ main{padding:0 16px 120px}
   letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
 .dcheck-h svg{width:15px;height:15px}
 .dcheck-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.strip{display:flex;gap:6px;margin-top:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-.strip img{height:74px;width:auto;border-radius:8px;border:1px solid var(--hair);flex:none;background:#000}
+.strip{display:flex;gap:6px;margin-top:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.strip img{height:84px;width:auto;border-radius:8px;border:1px solid var(--hair);flex:none;background:#000}
+.striphead{display:flex;gap:10px;align-items:center;margin-top:10px}
+.trim{font-size:11.5px;color:var(--muted-2);letter-spacing:.02em}
+.trim.ok{color:var(--green)}
+.striphead .trim:last-child{margin-left:auto;white-space:nowrap}
+.bar{height:5px;border-radius:3px;background:rgba(244,247,245,.12);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:3px;transition:width .2s}
+.rx{display:block;width:100%;text-align:left;background:rgba(201,168,76,.10);
+  border:1px solid rgba(201,168,76,.28);border-radius:12px;padding:11px 13px;margin-top:8px}
+.rx:active{background:rgba(201,168,76,.18)}
+.rx-l{display:block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2)}
+.rx-n{display:block;font-size:15.5px;color:var(--gold);margin-top:2px;letter-spacing:-.01em}
+.rx-r{display:inline-block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.rx-w{display:block;font-size:13.5px;color:rgba(244,247,245,.80);margin-top:5px;line-height:1.45}
+@keyframes flash{0%,100%{background:transparent}30%{background:rgba(201,168,76,.14)}}
+.drill.flash{animation:flash 1.6s ease}
 .verdict{display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:12px;
   margin-top:10px;font-size:15px;font-weight:600;letter-spacing:-.01em}
 .verdict.v-ok{background:rgba(95,191,143,.16);color:#8FE0B6}
@@ -403,7 +418,10 @@ const API_KEY_DEFAULT = "";
 const MODEL_DEFAULT   = "claude-sonnet-4-6";
 const API_URL         = "https://api.anthropic.com/v1/messages";
 const API_VERSION     = "2023-06-01";
-const FRAMES_PER_CLIP = 5;
+const FRAMES_PER_CLIP = 18;   // fotogramas enviados al coach por vídeo
+const FRAME_MAX_PX    = 512;  // lado largo de cada fotograma (coste por imagen)
+const SCAN_FPS        = 14;   // muestreo para detectar el swing
+const SCAN_SAMPLES    = 90;   // tope de muestras del escaneo
 
 /* ============ CURSO ============ */
 const LESSONS = [
@@ -1580,6 +1598,23 @@ function fingerPts(bx, by, dir, segs, bends, curl){
 }
 const P2 = pts => pts.map(p => p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
 
+/** Dedo con tres falanges: contorno, relleno, pliegues y nudillo. */
+function phalanges(parent, widths, skin, dark, glove){
+  const segs = [];
+  for(let j=0;j<3;j++){
+    segs.push({
+      o: E("polyline",{fill:"none",stroke:"#23160D","stroke-linecap":"round",
+        "stroke-width":widths[j]+3.6,opacity:.9},parent),
+      f: E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
+        "stroke-width":widths[j]},parent),
+      s: E("polyline",{fill:"none",stroke:dark,"stroke-linecap":"round",
+        "stroke-width":widths[j]*0.42,opacity:.30},parent),
+      j: E("circle",{fill:dark,opacity: glove ? .34 : .22},parent)
+    });
+  }
+  return segs;
+}
+
 /** Mano vista por el dorso, agarrando un shaft vertical situado en x≈-40. */
 function handBack(parent, o){
   o = o || {};
@@ -1595,20 +1630,16 @@ function handBack(parent, o){
   const WID = [12,10,8.4];
 
   const fingers = FB.map((f,i)=>{
-    const segs=[];
-    for(let j=0;j<3;j++){
-      const o1 = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
-        "stroke-width":WID[j]+3.4,opacity:.85},back);
-      const f1 = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
-        "stroke-width":WID[j]},back);
-      segs.push({o1,f1});
-    }
-    const tipO = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
-      "stroke-width":WID[2]+3.4,opacity:.85},front);
+    const segs = phalanges(back, WID, skin, dark, o.glove);
+    const tipO = E("polyline",{fill:"none",stroke:"#23160D","stroke-linecap":"round",
+      "stroke-width":WID[2]+3.6,opacity:.9},front);
     const tipF = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
       "stroke-width":WID[2]},front);
-    const nail = E("ellipse",{fill:dark,opacity:.55},front);
-    return {segs,tipO,tipF,nail,base:f};
+    const tipS = E("polyline",{fill:"none",stroke:dark,"stroke-linecap":"round",
+      "stroke-width":WID[2]*0.42,opacity:.28},front);
+    const nail = E("ellipse",{fill:"#F7E3CE",opacity:.65,stroke:dark,
+      "stroke-width":.7},front);
+    return {segs,tipO,tipF,tipS,nail,base:f};
   });
 
   const palm = E("path",{fill:skin,stroke:"#2A1A10","stroke-width":2.2,
@@ -1618,12 +1649,22 @@ function handBack(parent, o){
   const tendon = [0,1,2].map(()=>E("path",{fill:"none",stroke:dark,
     "stroke-width":1.3,opacity:.35,"stroke-linecap":"round"},front));
 
-  const thO = E("polyline",{fill:"none",stroke:"#2A1A10","stroke-linecap":"round",
-    "stroke-width":18,opacity:.55},front);
+  const web = E("path",{fill:"none",stroke:dark,"stroke-width":1.4,opacity:.3,
+    "stroke-linecap":"round"},front);
+  const thO = E("polyline",{fill:"none",stroke:"#23160D","stroke-linecap":"round",
+    "stroke-width":19,opacity:.9},front);
   const thF = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
-    "stroke-width":15},front);
+    "stroke-width":15.4},front);
   const thT = E("polyline",{fill:"none",stroke:skin,"stroke-linecap":"round",
-    "stroke-width":12.5},front);
+    "stroke-width":12.8},front);
+  const thJ = E("circle",{fill:dark,opacity:.2},front);
+  const thN = E("ellipse",{fill:"#F7E3CE",opacity:.6,stroke:dark,"stroke-width":.7},front);
+  const seams = o.glove ? [0,1,2,3].map(()=>E("path",{fill:"none",stroke:"var(--glove-d)",
+    "stroke-width":1.2,opacity:.55,"stroke-dasharray":"2.5 2.5"},front)) : [];
+  const strap = o.glove ? E("path",{fill:"var(--glove)",stroke:"#23160D",
+    "stroke-width":1.8,opacity:.95},front) : null;
+  const strapT = o.glove ? E("path",{fill:"none",stroke:"var(--glove-d)",
+    "stroke-width":1.4,opacity:.6},front) : null;
 
   const vLine = E("path",{fill:"none",stroke:"var(--gold)","stroke-width":2,
     "stroke-linecap":"round","stroke-linejoin":"round",opacity:0},front);
@@ -1641,37 +1682,72 @@ function handBack(parent, o){
         SEG[i], BEN, curl + squeeze*0.10);
       for(let j=0;j<3;j++){
         const seg = [pts[j], pts[j+1]];
-        A(fi.segs[j].o1,"points",P2(seg));
-        A(fi.segs[j].f1,"points",P2(seg));
+        A(fi.segs[j].o,"points",P2(seg));
+        A(fi.segs[j].f,"points",P2(seg));
+        // brillo longitudinal: desplaza la línea hacia el borde superior
+        A(fi.segs[j].s,"points",P2(seg.map(q=>[q[0]-1.6, q[1]-2.2])));
+        // nudillo en la articulación
+        A(fi.segs[j].j,"cx",pts[j][0]); A(fi.segs[j].j,"cy",pts[j][1]);
+        A(fi.segs[j].j,"r",(WID[j]*0.46).toFixed(1));
+        A(fi.segs[j].j,"opacity", j===0 ? (0.16 + squeeze*0.44).toFixed(2) : .18);
+        A(fi.segs[j].j,"fill", (j===0 && squeeze>0.6) ? "#FFFFFF" : dark);
       }
       const tip = [pts[2],pts[3]];
       A(fi.tipO,"points",P2(tip));
       A(fi.tipF,"points",P2(tip));
-      A(fi.nail,"cx",pts[3][0]); A(fi.nail,"cy",pts[3][1]);
-      A(fi.nail,"rx",3.8); A(fi.nail,"ry",3);
-      A(fi.nail,"opacity", o.glove ? 0 : .5);
+      A(fi.tipS,"points",P2(tip.map(q=>[q[0]-1.4, q[1]-2])));
+      A(fi.nail,"cx",pts[3][0]-0.6); A(fi.nail,"cy",pts[3][1]-1.2);
+      A(fi.nail,"rx",3.6); A(fi.nail,"ry",2.8);
+      A(fi.nail,"transform",`rotate(${(fi.base[2]+120).toFixed(0)} ${pts[3][0]} ${pts[3][1]})`);
+      A(fi.nail,"opacity", o.glove ? 0 : .6);
     });
 
+    // dorso: cresta de nudillos arriba, muñeca estrechándose abajo
     A(palm,"d",
-      "M -20 -8 C -25 -28, -17 -46, -2 -53 C 11 -59, 26 -57, 33 -48 "+
-      "C 40 -39, 40 -19, 35 -2 C 30 15, 16 25, 2 23 C -11 21, -17 12, -20 -8 Z");
-    A(shade,"d","M 12 -50 C 26 -46, 34 -30, 32 -8 C 30 10, 20 20, 6 22 "+
-      "C 22 16, 30 2, 28 -14 C 26 -32, 20 -44, 12 -50 Z");
+      "M -21 -10 C -27 -29, -19 -45, -4 -52 "+      // borde del índice
+      "C 6 -57, 18 -58, 27 -52 "+                    // cresta de nudillos
+      "C 36 -46, 40 -32, 38 -14 "+                   // canto del meñique
+      "C 36 4, 30 18, 20 25 "+
+      "C 11 31, -3 29, -10 21 "+
+      "C -17 13, -19 2, -21 -10 Z");
+    // sombra del canto cubital y volumen del dorso
+    A(shade,"d","M 16 -54 C 30 -46, 38 -30, 36 -10 C 34 8, 27 21, 17 27 "+
+      "C 27 18, 32 4, 31 -12 C 30 -31, 24 -46, 16 -54 Z");
     knuck.forEach((k,i)=>{
-      A(k,"cx",FB[i][0]+2); A(k,"cy",FB[i][1]+7);
-      A(k,"r", 5.2 + squeeze*1.2);
-      A(k,"opacity",(0.22 + squeeze*0.42).toFixed(2));
+      A(k,"cx",FB[i][0]+2.5); A(k,"cy",FB[i][1]+6);
+      A(k,"r", (5.4 + squeeze*1.6).toFixed(1));
+      A(k,"opacity",(0.20 + squeeze*0.46).toFixed(2));
       A(k,"fill", squeeze>0.55 ? "#FFFFFF" : dark);
     });
+    // tendones extensores, más marcados al apretar
     tendon.forEach((t,i)=>{
-      const x0 = FB[i][0]+4, x1 = x0+3;
-      A(t,"d",`M ${x0} ${FB[i][1]+12} C ${x1} ${FB[i][1]+28}, ${x1+1} ${FB[i][1]+40}, ${x1} ${FB[i][1]+52}`);
-      A(t,"opacity",(0.20 + squeeze*0.35).toFixed(2));
+      const x0 = FB[i][0]+4, x1 = x0 + 4 + i*0.8;
+      A(t,"d",`M ${x0} ${FB[i][1]+13} C ${x1} ${FB[i][1]+27}, ${x1+2} ${FB[i][1]+38}, ${x1+3} ${FB[i][1]+50}`);
+      A(t,"opacity",(0.16 + squeeze*0.40).toFixed(2));
     });
 
-    const th = fingerPts(16, -10, -26, [29,20], [-12,-16], 1 + squeeze*0.3);
-    A(thO,"points",P2(th)); A(thF,"points",P2([th[0],th[1]]));
+    // pulgar: dos falanges bajando por el shaft, con uña
+    const th = fingerPts(14, -14, -24, [27,19], [-14,-20], 1 + squeeze*0.28);
+    A(thO,"points",P2(th));
+    A(thF,"points",P2([th[0],th[1]]));
     A(thT,"points",P2([th[1],th[2]]));
+    A(thJ,"cx",th[1][0]); A(thJ,"cy",th[1][1]); A(thJ,"r",5.4);
+    A(thJ,"opacity",(0.16 + squeeze*0.30).toFixed(2));
+    A(thN,"cx",th[2][0]); A(thN,"cy",th[2][1]);
+    A(thN,"rx",4.4); A(thN,"ry",3.4);
+    A(thN,"opacity", o.glove ? 0 : .6);
+    // membrana entre pulgar e índice
+    A(web,"d",`M ${th[0][0]-3} ${th[0][1]-2} Q ${FB[0][0]+2} ${FB[0][1]+20}, ${FB[0][0]-4} ${FB[0][1]+6}`);
+
+    if(o.glove){
+      // costuras del guante y correa de muñeca
+      seams.forEach((sm,i)=>{
+        const b = FB[i];
+        A(sm,"d",`M ${b[0]-1} ${b[1]+4} C ${b[0]+1} ${b[1]+18}, ${b[0]+3} ${b[1]+32}, ${b[0]+4} ${b[1]+46}`);
+      });
+      A(strap,"d","M -14 16 C -4 27, 12 29, 24 21 L 27 31 C 12 40, -6 37, -18 25 Z");
+      A(strapT,"d","M 16 24 l 7 3");
+    }
 
     if(st.showV){
       const a = th[2], b = [FB[0][0]-4, FB[0][1]+4];
@@ -1706,8 +1782,8 @@ function gripScene(opt){
 
     const hUpper = handBack(shaftG, {glove:true});
     const hLower = handBack(shaftG, {glove:false});
-    A(hUpper.g,"transform","translate(-24,-54) scale(.96)");
-    A(hLower.g,"transform","translate(-18,46) scale(.96)");
+    A(hUpper.g,"transform","translate(-24,-44) scale(.97)");
+    A(hLower.g,"transform","translate(-14,34) scale(.93)");
 
     const gauge = E("g",null,svg);
     const t1 = E("text",{x:12,y:22,class:"ov-g"},svg);
@@ -1745,8 +1821,8 @@ function gripScene(opt){
         const u = t < .5 ? t*2 : (1-t)*2;
         const e = u*u*(3-2*u);
         const rot = -30 + e*30;
-        A(hUpper.g,"transform",`translate(-28,-46) rotate(${rot.toFixed(1)}) scale(.92)`);
-        A(hLower.g,"transform",`translate(-22,34) rotate(${(rot*0.8).toFixed(1)}) scale(.92)`);
+        A(hUpper.g,"transform",`translate(-24,-44) rotate(${rot.toFixed(1)}) scale(.97)`);
+        A(hLower.g,"transform",`translate(-14,34) rotate(${(rot*0.8).toFixed(1)}) scale(.93)`);
         hUpper.update({curl:1, squeeze:.15, showV:true});
         hLower.update({curl:1, squeeze:.15, showV:true});
         const ok = e > .72;
@@ -2259,27 +2335,131 @@ function seekTo(v,t){
     try{ v.currentTime = t; }catch(e){ clearTimeout(to); fin(); }
   });
 }
-async function extractFrames(file,n){
-  n = n || FRAMES_PER_CLIP;
+/** Perfil de movimiento del clip, muestreado a baja resolución. */
+async function motionProfile(v, dur, onProgress){
+  const cv = document.createElement("canvas");
+  const w = 48, h = Math.max(24, Math.round(48 * (v.videoHeight/v.videoWidth) || 36));
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext("2d", {willReadFrequently:true});
+  const n = Math.max(12, Math.min(SCAN_SAMPLES, Math.round(dur*SCAN_FPS)));
+  const prof = [];
+  let prev = null;
+  for(let i=0;i<n;i++){
+    const t = dur * i/(n-1);
+    await seekTo(v, Math.min(t, dur-0.03));
+    ctx.drawImage(v, 0, 0, w, h);
+    const d = ctx.getImageData(0,0,w,h).data;
+    const g = new Float32Array(w*h);
+    for(let p=0, q=0; p<d.length; p+=4, q++) g[q] = (d[p]*0.3 + d[p+1]*0.59 + d[p+2]*0.11);
+    let m = 0;
+    if(prev){ for(let q=0;q<g.length;q++) m += Math.abs(g[q]-prev[q]); m /= g.length; }
+    prev = g;
+    prof.push({t, m});
+    if(onProgress) onProgress(i/(n-1));
+  }
+  if(prof.length) prof[0].m = prof.length>1 ? prof[1].m : 0;
+  return prof;
+}
+
+/** Acota la ventana del swing: del inicio del takeaway al final del finish. */
+function swingWindow(prof, dur){
+  const ms = prof.map(p=>p.m);
+  const peak = ms.indexOf(Math.max(...ms));
+  const mx = ms[peak];
+  const base = [...ms].sort((a,b)=>a-b)[Math.floor(ms.length*0.3)];
+  if(mx < 1.2 || mx < base*2.2) return null;            // clip casi estático
+  // suavizado: quita picos de ruido sin borrar la forma del swing
+  const dt = dur / Math.max(1, prof.length-1);
+  const k = Math.max(1, Math.round(0.08/dt));
+  const sm = ms.map((_,i)=>{
+    let s=0, c=0;
+    for(let j=Math.max(0,i-k); j<=Math.min(ms.length-1,i+k); j++){ s+=ms[j]; c++; }
+    return s/c;
+  });
+  const thr = Math.max(base*1.5, Math.max(...sm)*0.08);
+  // primera y última vez que se cruza el umbral: así el valle del top
+  // (donde el movimiento cae casi a cero) no parte el swing en dos
+  let a = sm.findIndex(v => v > thr);
+  let b = sm.length - 1 - [...sm].reverse().findIndex(v => v > thr);
+  if(a < 0 || b < a) return null;
+  let t0 = prof[a].t - 0.15, t1 = prof[b].t + 0.22;
+  t0 = Math.max(0, t0); t1 = Math.min(dur, t1);
+  const span = t1 - t0;
+  if(span < 0.4 || span > 6) return null;
+  return {t0, t1, peakT: prof[peak].t};
+}
+
+/** Instantes a capturar: mezcla tiempo uniforme con movimiento acumulado,
+ *  de modo que la bajada (rápida) recibe más fotogramas que la subida. */
+function sampleTimes(prof, win, n){
+  const inside = prof.filter(p => p.t >= win.t0 && p.t <= win.t1);
+  if(inside.length < 3) return Array.from({length:n}, (_,i)=> win.t0 + (win.t1-win.t0)*i/(n-1));
+  const cum = [0];
+  // raíz cuadrada: comprime el pico del impacto para que no acapare los fotogramas
+  for(let i=1;i<inside.length;i++) cum.push(cum[i-1] + Math.sqrt(Math.max(0.0001, inside[i].m)));
+  const tot = cum[cum.length-1];
+  const atFrac = f => {
+    const target = f*tot;
+    let i = 1; while(i < cum.length-1 && cum[i] < target) i++;
+    const u = (target - cum[i-1]) / Math.max(1e-6, cum[i]-cum[i-1]);
+    return inside[i-1].t + (inside[i].t - inside[i-1].t)*u;
+  };
+  const times = [];
+  for(let i=0;i<n;i++){
+    const f = i/(n-1);
+    times.push(0.62*(win.t0 + (win.t1-win.t0)*f) + 0.38*atFrac(f));
+  }
+  // fuerza un fotograma en el punto más quieto antes del impacto (el top)
+  let topI = 0, topM = Infinity;
+  inside.forEach((p,i)=>{ if(p.t < win.peakT && p.m < topM){ topM = p.m; topI = i; } });
+  if(inside[topI] && inside[topI].t > win.t0 + 0.1) times.push(inside[topI].t);
+  times.push(win.peakT);
+  return [...new Set(times.map(t=>Math.round(t*1000)/1000))].sort((a,b)=>a-b).slice(0, n+2);
+}
+
+/**
+ * Recorta el clip al swing y devuelve los fotogramas listos para la API.
+ * Si no detecta un swing claro, usa el vídeo completo y lo indica.
+ */
+async function extractFrames(file, opts){
+  opts = opts || {};
+  const n = opts.n || FRAMES_PER_CLIP;
   const {v,url} = await loadVideo(file);
   const cv = $("#grabCanvas"), ctx = cv.getContext("2d");
-  const out = [];
   try{
     const dur = isFinite(v.duration) && v.duration>0 ? v.duration : 1;
     const vw = v.videoWidth, vh = v.videoHeight;
     if(!vw || !vh) throw new Error("el vídeo no expone dimensiones");
-    const scale = Math.min(1, 620/Math.max(vw,vh));
-    cv.width = Math.round(vw*scale); cv.height = Math.round(vh*scale);
-    for(let i=0;i<n;i++){
-      const t = Math.min(dur-0.05, dur*(i+0.5)/n);
-      if(t > 0.02) await seekTo(v,t);
-      ctx.drawImage(v,0,0,cv.width,cv.height);
-      const du = cv.toDataURL("image/jpeg",0.74);
-      out.push({dataUrl:du, b64:du.split(",")[1], mime:"image/jpeg"});
+
+    let win = null, prof = null;
+    if(!opts.full && dur > 0.6){
+      if(opts.onProgress) opts.onProgress("Buscando el swing en el vídeo…", 0);
+      prof = await motionProfile(v, dur, f => opts.onProgress && opts.onProgress("Buscando el swing en el vídeo…", f*0.6));
+      win = swingWindow(prof, dur);
     }
+    const trimmed = !!win;
+    if(!win) win = {t0:0, t1:dur, peakT:dur/2};
+
+    const times = prof && trimmed
+      ? sampleTimes(prof, win, n)
+      : Array.from({length:n}, (_,i)=> win.t0 + (win.t1-win.t0)*(i+0.5)/n);
+
+    const scale = Math.min(1, FRAME_MAX_PX/Math.max(vw,vh));
+    cv.width = Math.round(vw*scale); cv.height = Math.round(vh*scale);
+    const out = [];
+    for(let i=0;i<times.length;i++){
+      const t = Math.min(Math.max(0, times[i]), dur-0.03);
+      await seekTo(v, t);
+      ctx.drawImage(v,0,0,cv.width,cv.height);
+      const du = cv.toDataURL("image/jpeg",0.72);
+      out.push({dataUrl:du, b64:du.split(",")[1], mime:"image/jpeg", t});
+      if(opts.onProgress) opts.onProgress("Extrayendo fotogramas…", 0.6 + 0.4*(i+1)/times.length);
+    }
+    if(!out.length) throw new Error("no se pudo extraer ningún fotograma");
+    out.trimmed = trimmed;
+    out.t0 = win.t0; out.t1 = win.t1; out.dur = dur;
+    return out;
   } finally { v.src=""; URL.revokeObjectURL(url); }
-  if(!out.length) throw new Error("no se pudo extraer ningún fotograma");
-  return out;
 }
 
 /* ============ PROMPTS ============ */
@@ -2307,7 +2487,7 @@ Reglas:
 function drillSystem(lesson, drill, n){
   return `Eres un instructor de golf certificado PGA con 20 años de experiencia. Respondes SIEMPRE en español de España.
 
-Recibes ${n} FOTOGRAMAS extraídos en orden cronológico de un vídeo corto que el alumno acaba de grabar. Tu único trabajo es decidir si está ejecutando BIEN ESTE EJERCICIO CONCRETO, nada más.
+Recibes ${n} FOTOGRAMAS numerados en orden cronológico, extraídos de un vídeo corto que el alumno acaba de grabar y recortados al tramo con movimiento. Tu único trabajo es decidir si está ejecutando BIEN ESTE EJERCICIO CONCRETO, nada más.
 
 Ejercicio: "${drill.name}" (${drill.reps})
 Lección: ${lesson.title}
@@ -2338,26 +2518,75 @@ UNA sola corrección, la más importante. Si el veredicto es CORRECTO, escribe q
 Repeticiones concretas y la sensación a buscar en la próxima serie. Máximo tres líneas.`;
 }
 
-const ANALYZER_SYSTEM = `Eres un instructor de golf certificado PGA con 20 años de experiencia analizando swings de golfistas intermedios. Respondes SIEMPRE en español de España.
+/** Catálogo de ejercicios con su identificador, para que el coach los cite. */
+function drillCatalogue(){
+  return LESSONS.map(l =>
+    `L${l.id} · ${l.title}\n` +
+    l.drills_no_ball.map((d,i)=>`  ${l.id}n${i} | ${d.name} (sin bola)`).join("\n") + "\n" +
+    l.drills_with_ball.map((d,i)=>`  ${l.id}b${i} | ${d.name} (con bola)`).join("\n")
+  ).join("\n");
+}
 
-Recibes varios FOTOGRAMAS en orden cronológico extraídos de un vídeo del swing del alumno, más su descripción escrita.
+const analyzerSystem = () => `Eres un instructor de golf certificado PGA con 20 años de experiencia analizando swings de golfistas intermedios. Respondes SIEMPRE en español de España.
+
+Recibes FOTOGRAMAS en orden cronológico extraídos de un vídeo del swing del alumno, más su descripción escrita. Los fotogramas están recortados al swing y repartidos de forma no uniforme: hay más densidad en la bajada y el impacto, que es donde el movimiento es rápido.
 
 Reglas innegociables:
 - Analiza SOLO lo que se ve en las imágenes y lo que el alumno escribe. Si un fotograma está borroso o mal encuadrado, dilo en vez de suponer.
-- Di a qué fase del swing corresponde cada fotograma que uses como prueba.
+- Numera los fotogramas del 1 en adelante y cita el número cuando uses uno como prueba, diciendo a qué fase del swing corresponde.
+- Los fotogramas no están igualmente espaciados en el tiempo: no deduzcas de ellos velocidad ni tempo.
 - NUNCA inventes datos de vuelo de bola, velocidad, spin, ángulo de ataque ni dispersión que el alumno no haya dado.
 - El alumno tiene años de práctica: prioriza el error que esté más abajo en la cadena causal.
 
-Devuelve EXACTAMENTE estas tres secciones con estos encabezados literales:
+Al final debes recetar ejercicios DEL CATÁLOGO de esta app. Catálogo (identificador | nombre):
+
+${drillCatalogue()}
+
+Devuelve EXACTAMENTE estas cuatro secciones con estos encabezados literales:
 
 ## Lo que se ve bien
+Dos o tres puntos concretos, citando el número de fotograma.
+
 ## Errores clave
-## Drill para corregirlo`;
+De uno a tres puntos, el más importante primero, cada uno con su consecuencia en la bola y el fotograma donde se ve.
+
+## Por dónde empezar
+Un párrafo corto: qué error atacar primero y por qué ese y no otro.
+
+## Ejercicios recomendados
+De dos a cuatro líneas. Cada línea con este formato EXACTO, empezando por el identificador entre corchetes:
+[2n9] por qué este ejercicio corrige lo que has visto
+Usa SOLO identificadores que aparezcan en el catálogo, copiados tal cual. No inventes identificadores ni nombres de ejercicios. Ordena de más básico a más avanzado.`;
 
 const analyzerPrefill = () =>
 `Palo usado: \nVuelo de bola habitual con este palo: \nQué siento durante el swing: \nQué llevo años intentando corregir sin éxito: \nMi hándicap aproximado: `;
 
 /* ============ RENDER DE FEEDBACK ============ */
+/** Resuelve un identificador "2n9" al ejercicio y su lección. */
+function findDrill(id){
+  const m = /^(\d+)([nb])(\d+)$/.exec(String(id||""));
+  if(!m) return null;
+  const lesson = LESSONS.find(l=>l.id === +m[1]);
+  if(!lesson) return null;
+  const arr = m[2] === "n" ? lesson.drills_no_ball : lesson.drills_with_ball;
+  const drill = arr[+m[3]];
+  return drill ? {lesson, drill} : null;
+}
+/** Abre la lección del ejercicio y salta hasta él. */
+function openDrill(id){
+  const f = findDrill(id);
+  if(!f) return;
+  if(chat.classList.contains("open")) closeChat();
+  openLesson(f.lesson.id);
+  const t = document.getElementById("d-"+id);
+  if(t){
+    const sc = t.closest(".sheet");
+    sc.scrollTop = sc.scrollTop + t.getBoundingClientRect().top - 62;
+    t.classList.add("flash");
+    setTimeout(()=>t.classList.remove("flash"), 1600);
+  }
+}
+
 const FB_DEFS = [
   {re:/lo que se ve bien/i, cls:"ok",   icon:"✅"},
   {re:/errores? clave/i,    cls:"warn", icon:"⚠️"},
@@ -2378,6 +2607,25 @@ function renderFeedback(text){
       const cls = /^CORRECTO/.test(v) ? "v-ok" : /^CASI/.test(v) ? "v-mid" : "v-bad";
       html += `<div class="verdict ${cls}"><span class="vdot"></span><span>${esc(body)}</span></div>`;
       matched++; continue;
+    }
+    if(/ejercicios recomendados/i.test(head) && body){
+      const items = body.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)
+        .map(line=>{
+          const m = /^[-*•\s]*\[\s*(\d+[nb]\d+)\s*\]\s*(.*)$/.exec(line);
+          if(!m) return null;
+          const d = findDrill(m[1]);
+          return d ? {id:m[1], drill:d.drill, lesson:d.lesson, why:m[2]} : null;
+        }).filter(Boolean);
+      if(items.length){
+        html += `<div class="fb-sec fix"><h4>🎯 ${esc(head)}</h4><div class="body">` +
+          items.map(it=>`<button class="rx" data-open="${it.id}">
+            <span class="rx-l">L${it.lesson.id} · ${esc(it.lesson.title)}</span>
+            <span class="rx-n">${esc(it.drill.name)}</span>
+            <span class="rx-r">${esc(it.drill.reps)}</span>
+            ${it.why ? `<span class="rx-w">${esc(it.why)}</span>` : ""}
+          </button>`).join("") + `</div></div>`;
+        matched++; continue;
+      }
     }
     const def = FB_DEFS.find(d=>d.re.test(head));
     if(def && body){
@@ -2404,6 +2652,18 @@ function pickVideo(kind, handler){
   });
 });
 
+function progressHTML(msg, f){
+  return `<div class="note" style="margin-top:10px">${esc(msg)}
+    <div class="bar"><i style="width:${Math.round((f||0)*100)}%"></i></div></div>`;
+}
+function stripHTML(fr){
+  const cab = fr.trimmed
+    ? `<span class="trim ok">✂ Swing recortado · ${fr.t0.toFixed(1)}–${fr.t1.toFixed(1)} s de ${fr.dur.toFixed(1)} s</span>`
+    : `<span class="trim">Vídeo completo · no se detectó un swing claro</span>`;
+  return `<div class="striphead">${cab}<span class="trim">${fr.length} fotogramas</span></div>
+    <div class="strip">${fr.map((f,i)=>`<img src="${f.dataUrl}" alt="Fotograma ${i+1}" title="${f.t.toFixed(2)} s">`).join("")}</div>`;
+}
+
 const drillRef = new Map();
 function drillCheckBlock(lesson, drill, key){
   drillRef.set(key,{lesson,drill});
@@ -2423,18 +2683,17 @@ function runDrillCheck(key, src){
   if(!getKey()){ openSettings(true); return; }
   const out = $(".dc-out", box);
   pickVideo(src, async file=>{
-    out.innerHTML = `<div class="note" style="margin-top:10px">Extrayendo fotogramas…</div>`;
     let fr;
-    try{ fr = await extractFrames(file); }
+    try{ fr = await extractFrames(file, {onProgress:(msg,f)=>{ out.innerHTML = progressHTML(msg,f); }}); }
     catch(err){
       out.innerHTML = `<div class="err" style="margin-top:10px">No se pudo leer el vídeo (${esc(err.message||"error")}). Prueba con un clip más corto o en formato estándar.</div>`;
       return;
     }
-    const strip = `<div class="strip">${fr.map((f,i)=>`<img src="${f.dataUrl}" alt="Fotograma ${i+1}">`).join("")}</div>`;
+    const strip = stripHTML(fr);
     out.innerHTML = strip + `<div class="note" style="margin-top:10px"><span class="typing" style="display:inline-flex;vertical-align:middle;margin-right:8px"><i></i><i></i><i></i></span>El coach está revisando tu ejecución.</div>`;
     const content = fr.map(f=>({type:"image",source:{type:"base64",media_type:f.mime,data:f.b64}}));
     content.push({type:"text", text:
-`Estos son ${fr.length} fotogramas en orden cronológico de mi ejecución del ejercicio "${ref.drill.name}".
+`Estos son ${fr.length} fotogramas en orden cronológico${fr.trimmed ? ", recortados al tramo de movimiento," : ""} de mi ejecución del ejercicio "${ref.drill.name}".
 Dime si lo estoy haciendo bien según los puntos de control, con las cuatro secciones indicadas.`});
     try{
       const reply = await callClaude({system: drillSystem(ref.lesson, ref.drill, fr.length),
@@ -2483,7 +2742,7 @@ function viewCurso(){
 function viewAnalizador(){
   return `<div class="page-head">
     <h1 class="page-title">Analizador de swing</h1>
-    <p class="page-sub">Graba o elige un vídeo. Extraemos ${FRAMES_PER_CLIP} fotogramas del movimiento y el coach los analiza con tu descripción.</p>
+    <p class="page-sub">Graba o elige un vídeo. Recortamos el swing automáticamente y sacamos ${FRAMES_PER_CLIP} fotogramas, con más densidad en la bajada.</p>
   </div>
   <div class="dcheck-btns">
     <button class="btn" id="anCam">${ICON.cam} Grabar</button>
@@ -2684,20 +2943,28 @@ function paintFrames(){
   const w = $("#frameWrap");
   if(!w) return;
   w.innerHTML = frames
-    ? `<div class="strip">${frames.map((f,i)=>`<img src="${f.dataUrl}" alt="Fotograma ${i+1}">`).join("")}</div>
-       <p style="font-size:12.5px;color:var(--muted-2);margin-top:6px">${frames.length} fotogramas del movimiento</p>`
+    ? stripHTML(frames) + (frames.trimmed
+        ? `<button class="btn btn-ghost btn-sm" id="anFull" style="margin-top:8px">Usar el vídeo completo</button>`
+        : "")
     : "";
+  const bf = $("#anFull");
+  if(bf) bf.addEventListener("click", ()=>grabForAnalyzer("again", true));
 }
-function grabForAnalyzer(src){
-  pickVideo(src, async file=>{
+let lastClip = null;
+function grabForAnalyzer(src, full){
+  const run = async file => {
+    lastClip = file;
     const w = $("#frameWrap");
-    if(w) w.innerHTML = `<div class="note">Extrayendo fotogramas…</div>`;
-    try{ frames = await extractFrames(file); paintFrames(); }
-    catch(err){
+    try{
+      frames = await extractFrames(file, {full, onProgress:(msg,f)=>{ if(w) w.innerHTML = progressHTML(msg,f); }});
+      paintFrames();
+    }catch(err){
       frames = null;
       if(w) w.innerHTML = `<div class="err">No se pudo leer el vídeo (${esc(err.message||"error")}). Puedes analizar solo con la descripción escrita.</div>`;
     }
-  });
+  };
+  if(src === "again" && lastClip) run(lastClip);
+  else pickVideo(src, run);
 }
 async function runAnalysis(){
   const btn = $("#btnAnalyze"), out = $("#fbWrap");
@@ -2714,15 +2981,15 @@ async function runAnalysis(){
     source:{type:"base64", media_type:f.mime, data:f.b64}}));
   content.push({type:"text", text:
 `Soy un golfista ${getHand()} de nivel intermedio con varios años de práctica y errores que no consigo corregir.
-${frames ? `Arriba tienes ${frames.length} fotogramas en orden cronológico de mi swing.` : "No he podido adjuntar imágenes; analiza solo mi descripción y dilo explícitamente."}
+${frames ? `Arriba tienes ${frames.length} fotogramas en orden cronológico de mi swing${frames.trimmed ? ", recortados automáticamente al tramo del swing" : " (vídeo completo)"}.` : "No he podido adjuntar imágenes; analiza solo mi descripción y dilo explícitamente."}
 
 Mi descripción:
 ${desc || "(sin descripción)"}
 
 Analiza y responde con las tres secciones indicadas.`});
   try{
-    const reply = await callClaude({system:ANALYZER_SYSTEM,
-      messages:[{role:"user", content}], maxTokens:2000});
+    const reply = await callClaude({system:analyzerSystem(),
+      messages:[{role:"user", content}], maxTokens:2400});
     out.innerHTML = renderFeedback(reply);
   }catch(e){
     out.innerHTML = `<div class="err">${esc(e.message==="NO_KEY"
@@ -2774,6 +3041,8 @@ document.addEventListener("click", e=>{
   if(c){ const v=c.dataset.chat; openChat(v==="general"?null:LESSONS.find(x=>x.id===+v)); return; }
   const dc = e.target.closest("[data-dc]");
   if(dc){ runDrillCheck(dc.dataset.dc, dc.dataset.src); return; }
+  const rx = e.target.closest("[data-open]");
+  if(rx){ openDrill(rx.dataset.open); return; }
   const go = e.target.closest("[data-goto]");
   if(go){
     const t = document.getElementById("d-"+go.dataset.goto);
