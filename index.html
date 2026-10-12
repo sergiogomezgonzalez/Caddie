@@ -486,7 +486,7 @@ const LESSONS = [
     {name:"Pitch de 40 m con presión constante", reps:"12 bolas, wedge", animation:"nine_to_three",
      cue:"Mismo swing en todos. El foco es que la presión **no suba en la transición**.",
      check:"Los antebrazos siguen relajados arriba; no hay tirón brusco desde la transición"},
-    {name:"Bola desde tee alto con hierro medio", reps:"10 bolas", animation:"grip_pressure",
+    {name:"Bola desde tee alto con hierro medio", reps:"10 bolas", animation:"grip_pressure", props:"teehigh",
      cue:"Tee alto exagera el barrido. **Con grip tenso harás topped**; con presión 4 el palo barre solo.",
      check:"El contacto es limpio, sin tops ni golpes gordos; las manos no se agarrotan antes del impacto"}
   ],
@@ -507,16 +507,16 @@ const LESSONS = [
     "Alineación: pies, caderas y hombros paralelos a la línea objetivo, no apuntando a bandera. Es la causa número uno de ajustes compensatorios."
   ],
   drills_no_ball:[
-    {name:"Bisagra de cadera contra la pared", reps:"3 × 10 reps", animation:"posture_hinge",
+    {name:"Bisagra de cadera contra la pared", reps:"3 × 10 reps", animation:"posture_hinge", props:"wall",
      cue:"De espaldas a una pared, a un palmo. **Empuja los glúteos hasta tocarla** mientras el pecho baja. Eso es bisagra de cadera, no doblar la espalda.",
      check:"La espalda se mantiene recta, sin joroba lumbar ni dorsal; el movimiento nace de la cadera; las rodillas apenas se flexionan"},
     {name:"Ancho con referencia de hombros", reps:"3 × 8 setups", animation:"stance_width",
      cue:"Monta el stance mirando que la **parte exterior de cada pie caiga bajo el hombro**. Con driver, un pie más por fuera.",
      check:"El exterior de cada pie cae bajo el hombro correspondiente; el peso está en el centro del pie, no en talones ni puntas"},
-    {name:"Carriles de alineación", reps:"5 min", animation:"alignment_rails",
+    {name:"Carriles de alineación", reps:"5 min", animation:"alignment_rails", props:"rails",
      cue:"Dos varillas: una en la línea de pies, otra en la línea de bola. **Los pies van paralelos**, no apuntando a bandera.",
      check:"Pies, caderas y hombros paralelos a la varilla; los hombros no están abiertos ni cerrados respecto a los pies"},
-    {name:"Palo en tres puntos de la columna", reps:"3 × 10 reps", animation:"posture_hinge",
+    {name:"Palo en tres puntos de la columna", reps:"3 × 10 reps", animation:"posture_hinge", props:"clubspine",
      cue:"Un palo vertical tocando cabeza, dorsal y sacro. **Bisagra sin que se despegue ninguno de los tres.**",
      check:"Los tres puntos de contacto se mantienen durante la bisagra; no aparece joroba dorsal ni arco lumbar exagerado"},
     {name:"Equilibrio en tres zonas del pie", reps:"3 × 30 s", animation:"stance_width",
@@ -534,13 +534,13 @@ const LESSONS = [
     {name:"Rodillas: flexión mínima útil", reps:"3 × 12 reps", animation:"posture_hinge",
      cue:"Exagera: rodillas rectas, luego sentadilla, luego **la flexión mínima que te deja girar**. Esa es la tuya.",
      check:"Las rodillas quedan desbloqueadas pero no en sentadilla; las tibias están casi verticales"},
-    {name:"Perfil en el espejo", reps:"3 × 10 setups", animation:"posture_profile",
+    {name:"Perfil en el espejo", reps:"3 × 10 setups", animation:"posture_profile", props:"mirror",
      cue:"De perfil ante el espejo: **hombros sobre las puntas de los pies**, brazos colgando, barbilla fuera del pecho. Tres referencias, una mirada.",
      check:"Los hombros caen sobre la vertical de las puntas; las manos cuelgan bajo los hombros; la espalda está recta"},
-    {name:"Silla fantasma: bisagra, no sentadilla", reps:"3 × 15 reps", animation:"posture_hinge",
+    {name:"Silla fantasma: bisagra, no sentadilla", reps:"3 × 15 reps", animation:"posture_hinge", props:"chairback",
      cue:"Una silla justo detrás. Toca el borde con los glúteos **sin sentarte y sin flexionar más las rodillas**. Eso separa bisagra de sentadilla.",
      check:"Los glúteos llegan atrás con las rodillas casi quietas; el pecho baja al mismo tiempo; no hay sentadilla"},
-    {name:"Bisagra con banda en la cadera", reps:"3 × 12 reps", animation:"posture_hinge",
+    {name:"Bisagra con banda en la cadera", reps:"3 × 12 reps", animation:"posture_hinge", props:"bandhip",
      cue:"Una banda elástica rodeando la cadera, anclada delante y tirando hacia atrás. **Deja que la banda te enseñe el gesto.**",
      check:"El movimiento nace de la cadera empujando atrás; la columna se mantiene larga; las rodillas apenas se mueven"},
     {name:"Un puño entre barbilla y pecho", reps:"3 × 10 reps de 20 s", animation:"setup_check",
@@ -555,7 +555,7 @@ const LESSONS = [
     {name:"Postura con los ojos cerrados", reps:"3 × 30 s", animation:"setup_check",
      cue:"Monta la postura, cierra los ojos y aguanta medio minuto. **Nota hacia dónde se te va el peso.** Ahí está tu tendencia.",
      check:"El peso permanece en el centro del pie durante los 30 segundos; no hay balanceo creciente"},
-    {name:"Ángulo de columna constante", reps:"3 × 12 reps", animation:"spine_angle",
+    {name:"Ángulo de columna constante", reps:"3 × 12 reps", animation:"spine_angle", props:"clubground",
      cue:"Sube y baja a cámara lenta **sin cambiar la inclinación del tronco**. Un palo en el suelo apuntando a tu esternón te lo delata.",
      check:"La inclinación del tronco se mantiene durante todo el giro; la cabeza no sube ni baja"},
     {name:"Libro abierto: movilidad torácica", reps:"2 × 10 por lado", animation:"chest_turn_posture",
@@ -567,7 +567,7 @@ const LESSONS = [
     {name:"Plancha con rotación", reps:"3 × 8 por lado", animation:"chest_turn_posture",
      cue:"El core es lo que te sostiene la inclinación durante el swing. **Si se cansa, te levantas en la bajada.**",
      check:"La cadera no cae ni se eleva al rotar; el movimiento es controlado, no por inercia"},
-    {name:"Vídeo de perfil con el móvil", reps:"1 × 5 min por sesión", animation:"posture_profile",
+    {name:"Vídeo de perfil con el móvil", reps:"1 × 5 min por sesión", animation:"posture_profile", props:"phone",
      cue:"Apoya el móvil en el bolso, a la altura de la cadera y de perfil. **Graba tu setup y compáralo con el del mes pasado.**",
      check:"La cámara está a la altura de la cadera y perpendicular a la línea de pies; se ve el cuerpo entero"}
   ],
@@ -578,7 +578,7 @@ const LESSONS = [
     {name:"Tres anchos, el mismo palo", reps:"12 bolas, hierro 7", animation:"stance_width",
      cue:"Cuatro bolas con stance estrecho, cuatro normal, cuatro ancho. **Compara contacto y equilibrio**, no distancia.",
      check:"El ancho cambia de verdad entre series; el mejor contacto y equilibrio aparecen en el ancho de hombros"},
-    {name:"Varilla en los pies, 15 golpes", reps:"15 bolas, hierro 8", animation:"alignment_rails",
+    {name:"Varilla en los pies, 15 golpes", reps:"15 bolas, hierro 8", animation:"alignment_rails", props:"rail1",
      cue:"Varilla en la línea de pies durante toda la serie. **No la quites para el golpe.**",
      check:"Los pies quedan paralelos a la varilla en todos los golpes; no hay recolocación furtiva antes de pegar"},
     {name:"Ojos cerrados tras el setup", reps:"10 bolas, hierro 9", animation:"ball_position",
@@ -605,28 +605,28 @@ const LESSONS = [
     "A la altura de la cadera, la puntera del palo apunta al cielo y el shaft es paralelo a la línea de pies. Es tu primer punto de control."
   ],
   drills_no_ball:[
-    {name:"Triángulo en bloque", reps:"3 × 12 reps", animation:"takeaway_triangle",
+    {name:"Triángulo en bloque", reps:"3 × 12 reps", animation:"takeaway_triangle", props:"towelarms",
      cue:"Una toalla doblada bajo ambas axilas. **Llévala hasta la cadera sin que se caiga**: obliga a mover el triángulo entero.",
      check:"La toalla no se cae; el triángulo brazos-hombros conserva su forma; las muñecas no se rompen en los primeros 50 cm"},
-    {name:"Camino de la cabeza del palo", reps:"3 × 10 reps", animation:"takeaway_path",
+    {name:"Camino de la cabeza del palo", reps:"3 × 10 reps", animation:"takeaway_path", props:"headcover",
      cue:"Un headcover 15 cm por fuera y por detrás de la bola. **Pasa por dentro sin tocarlo** y para a la altura de la cadera a comprobar.",
      check:"La cabeza del palo pasa por dentro del headcover; a la altura de la cadera el shaft queda paralelo a la línea de pies y la puntera apunta al cielo"},
     {name:"Puntera al cielo a la altura de la cadera", reps:"3 × 12 reps", animation:"toe_up",
      cue:"Para a la altura de la cadera y comprueba: **puntera al cielo, shaft paralelo a los pies**. Es tu primer punto de control.",
      check:"A la altura de la cadera la puntera apunta al cielo; el shaft es paralelo a la línea de pies, no cruzado"},
-    {name:"Takeaway contra la pared", reps:"3 × 10 reps", animation:"takeaway_path",
+    {name:"Takeaway contra la pared", reps:"3 × 10 reps", animation:"takeaway_path", props:"wall",
      cue:"De espaldas a una pared, a un palmo. **El palo no la toca** en los primeros 50 cm: si la golpea, sale por fuera.",
      check:"La cabeza del palo no golpea la pared; el palo no se separa del cuerpo hacia fuera"},
     {name:"Tres segundos para los primeros 50 cm", reps:"3 × 12 reps", animation:"takeaway_triangle",
      cue:"Cuenta tres segundos completos para el tramo inicial. **Lentitud deliberada**, luego ritmo normal.",
      check:"El tramo inicial dura claramente tres segundos; no hay aceleración brusca al salir de la bola"},
-    {name:"Palo atravesado entre los antebrazos", reps:"3 × 10 reps", animation:"takeaway_triangle",
+    {name:"Palo atravesado entre los antebrazos", reps:"3 × 10 reps", animation:"takeaway_triangle", props:"clubforearms",
      cue:"Un palo corto cruzado entre los antebrazos. **Si se cae, las manos han trabajado por su cuenta.**",
      check:"El palo intermedio no se cae; los antebrazos conservan la distancia entre sí durante el tramo inicial"},
-    {name:"Freno a las 8 en punto con reflejo", reps:"3 × 15 reps", animation:"toe_up",
+    {name:"Freno a las 8 en punto con reflejo", reps:"3 × 15 reps", animation:"toe_up", props:"mirror",
      cue:"Para a las 8 en punto y **comprueba tu reflejo en un cristal** antes de continuar. Corrige ahí, no arriba.",
      check:"La posición a las 8 se repite igual; la cara del palo no está ni abierta ni cerrada respecto al arco"},
-    {name:"Moneda bajo la bola del pie trasero", reps:"3 × 12 reps", animation:"takeaway_path",
+    {name:"Moneda bajo la bola del pie trasero", reps:"3 × 12 reps", animation:"takeaway_path", props:"coin",
      cue:"Una moneda bajo la parte delantera del pie trasero. **No debes aplastarla**: significaría que empujas lateralmente.",
      check:"El peso no se desplaza hacia el exterior del pie trasero; el takeaway es rotacional"},
     {name:"Takeaway sin perder la inclinación", reps:"3 × 12 reps", animation:"spine_angle",
@@ -643,7 +643,7 @@ const LESSONS = [
     {name:"Arranque ya desde la altura de la cadera", reps:"12 bolas, hierro 9", animation:"toe_up",
      cue:"Empieza el swing **colocado ya a la altura de la cadera**, sin takeaway. Luego añade el tramo inicial y compara.",
      check:"La posición de partida es la de control; el contacto no empeora al reincorporar el takeaway"},
-    {name:"Headcover fuera, serie completa", reps:"15 bolas, hierro 8", animation:"takeaway_path",
+    {name:"Headcover fuera, serie completa", reps:"15 bolas, hierro 8", animation:"takeaway_path", props:"headcover",
      cue:"Headcover por fuera y detrás de la bola. **Golpea los 15 sin tocarlo.**",
      check:"El headcover no se mueve en ningún golpe; la trayectoria no sale por fuera de la línea"},
     {name:"Pausa de un segundo a la cadera", reps:"12 bolas", animation:"takeaway_triangle",
@@ -670,7 +670,7 @@ const LESSONS = [
     "El plano de swing es el camino que recorre el palo. Arriba, el shaft debería apuntar aproximadamente a la línea de bola; por encima o por debajo son los dos errores de plano."
   ],
   drills_no_ball:[
-    {name:"Giro con palo en los hombros", reps:"3 × 12 reps", animation:"shoulder_turn",
+    {name:"Giro con palo en los hombros", reps:"3 × 12 reps", animation:"shoulder_turn", props:"clubshoulders",
      cue:"Palo cruzado sobre los hombros en postura de golpe. **Gira hasta que el extremo apunte a la bola**, con la cadera girando la mitad.",
      check:"Los hombros giran claramente más que las caderas; la cabeza se mantiene en su sitio; no hay balanceo lateral hacia el pie trasero"},
     {name:"Set de muñecas a la altura de la cadera", reps:"3 × 10 reps", animation:"wrist_set",
@@ -682,7 +682,7 @@ const LESSONS = [
     {name:"Posición arriba congelada", reps:"3 × 12 reps de 5 s", animation:"top_position",
      cue:"Llega arriba y **aguanta cinco segundos**. Comprueba shaft, manos y hombro antes de deshacer.",
      check:"El shaft apunta a la línea de bola; las manos quedan sobre el hombro trasero; la posición se aguanta sin temblar"},
-    {name:"Giro contra una silla", reps:"3 × 10 reps", animation:"shoulder_turn",
+    {name:"Giro contra una silla", reps:"3 × 10 reps", animation:"shoulder_turn", props:"chair",
      cue:"Una silla pegada a la cadera trasera. **Gira sin empujarla.** Eso es girar; empujarla es balancearse.",
      check:"La cadera trasera no empuja la silla hacia atrás; el giro es rotacional, no lateral"},
     {name:"Pies juntos, subida completa", reps:"3 × 12 reps", animation:"feet_together",
@@ -694,7 +694,7 @@ const LESSONS = [
     {name:"Set de muñecas aislado", reps:"3 × 15 reps", animation:"wrist_set",
      cue:"Brazos pegados al cuerpo, sin subirlos. **Solo las muñecas forman el ángulo.** Aísla el gesto.",
      check:"Los brazos no suben; el ángulo se forma únicamente con las muñecas"},
-    {name:"Brazo de arriba estirado con banda", reps:"3 × 12 reps", animation:"top_position",
+    {name:"Brazo de arriba estirado con banda", reps:"3 × 12 reps", animation:"top_position", props:"bandarms",
      cue:"Una banda elástica alrededor de los brazos. **El brazo de arriba no se dobla** al llegar arriba.",
      check:"El brazo de arriba conserva su extensión arriba; los brazos no se separan uno del otro"},
     {name:"Subida en tres paradas", reps:"3 × 8 reps", animation:"half_swing",
@@ -756,7 +756,7 @@ const LESSONS = [
     {name:"Plantar el talón delantero", reps:"3 × 12 reps", animation:"weight_shift",
      cue:"Arriba, **planta el talón delantero** para iniciar la bajada. Esa es tu señal de salida, no los brazos.",
      check:"El talón delantero baja antes de que los brazos empiecen; la cadera gira al plantarlo"},
-    {name:"Apertura de cadera contra pared", reps:"3 × 10 reps", animation:"hip_clear",
+    {name:"Apertura de cadera contra pared", reps:"3 × 10 reps", animation:"hip_clear", props:"wallx",
      cue:"Cadera delantera tocando una pared. **Rótala sin despegarla**: eso impide deslizar hacia el objetivo.",
      check:"La cadera rota sin deslizarse lateralmente; el contacto con la pared se mantiene durante la bajada"},
     {name:"Parada a media bajada", reps:"3 × 12 reps", animation:"pump_drill",
@@ -765,16 +765,16 @@ const LESSONS = [
     {name:"Palo invertido: dónde silba", reps:"3 × 20 swings", animation:"transition_sequence",
      cue:"Agarra el palo por la cabeza y balancéalo. **El silbido debe oírse pasada la bola**, no antes.",
      check:"El sonido del aire se produce después de la posición de la bola; no hay silbido en la transición"},
-    {name:"Swing con silla delante del pie trasero", reps:"3 × 10 reps", animation:"hip_clear",
+    {name:"Swing con silla delante del pie trasero", reps:"3 × 10 reps", animation:"hip_clear", props:"chairfront",
      cue:"Una silla justo delante del pie trasero. **Si la golpeas en la bajada, estás tirando el cuerpo hacia la bola.**",
      check:"El cuerpo no se acerca a la bola en la bajada; la distancia a la silla se mantiene"},
-    {name:"Giro sentado en un taburete", reps:"3 × 12 reps", animation:"transition_sequence",
+    {name:"Giro sentado en un taburete", reps:"3 × 12 reps", animation:"transition_sequence", props:"stool",
      cue:"Sentado, brazos cruzados. **Gira el torso en la secuencia correcta** aislando el tren superior.",
      check:"El torso rota sin ayuda de las piernas; la secuencia torso-brazos se mantiene"},
     {name:"Bajar sin levantarse", reps:"3 × 12 reps", animation:"spine_angle",
      cue:"La causa número uno de topped: el cuerpo se endereza en la bajada. **Siente que bajas hacia la bola, no que te levantas de ella.**",
      check:"La inclinación del tronco se conserva desde arriba hasta el impacto; la cabeza no asciende en la bajada"},
-    {name:"Espalda contra la pared en la bajada", reps:"3 × 10 reps", animation:"posture_profile",
+    {name:"Espalda contra la pared en la bajada", reps:"3 × 10 reps", animation:"posture_profile", props:"wall",
      cue:"Con los glúteos rozando una pared, **mantén el contacto durante toda la bajada**. Si lo pierdes, te has acercado a la bola.",
      check:"El contacto con la pared se mantiene en la bajada; la distancia a la bola no se reduce"}
   ],
@@ -818,10 +818,10 @@ const LESSONS = [
     {name:"Arco con punto bajo adelantado", reps:"3 × 15 swings", animation:"low_point",
      cue:"Swings sin bola sobre hierba. **Mira dónde roza el palo**: debe tocar siempre por delante de donde estaría la bola.",
      check:"La marca en el suelo aparece siempre por delante del punto de referencia; la marca es consistente entre repeticiones"},
-    {name:"Impacto contra bolsa", reps:"3 × 12 reps", animation:"shaft_lean",
+    {name:"Impacto contra bolsa", reps:"3 × 12 reps", animation:"shaft_lean", props:"bag",
      cue:"Golpea una bolsa de impacto y **aguanta la posición sin rebotar**: manos delante, cadera abierta, peso delantero.",
      check:"Las manos están por delante de la cabeza del palo en el contacto; la posición se aguanta sin rebote"},
-    {name:"Raspado de línea en el suelo", reps:"3 × 20 swings", animation:"low_point",
+    {name:"Raspado de línea en el suelo", reps:"3 × 20 swings", animation:"low_point", props:"line",
      cue:"Dibuja una línea con spray o tiza y **raspa siempre por delante de ella**, nunca detrás.",
      check:"La marca cae de forma constante por delante de la línea; no hay toques por detrás"},
     {name:"Muñeca de arriba plana", reps:"3 × 15 reps", animation:"shaft_lean",
@@ -830,7 +830,7 @@ const LESSONS = [
     {name:"Impacto con el palo frenado", reps:"3 × 12 reps", animation:"shaft_lean",
      cue:"Alguien sujeta la cabeza del palo en la posición de impacto. **Empuja contra él con el cuerpo**, no con las manos.",
      check:"La presión viene del giro del cuerpo; las manos no se adelantan solas ni se rompen"},
-    {name:"Divot después del tee", reps:"3 × 15 swings", animation:"low_point",
+    {name:"Divot después del tee", reps:"3 × 15 swings", animation:"low_point", props:"tee",
      cue:"Un tee clavado como referencia. **El palo debe entrar en el suelo pasado el tee**, nunca antes.",
      check:"El contacto con el suelo empieza por delante del tee; la profundidad del divot es constante"},
     {name:"Misma altura en el impacto que en el setup", reps:"3 × 15 reps", animation:"spine_angle",
@@ -838,19 +838,19 @@ const LESSONS = [
      check:"La cabeza está a la misma altura o algo más baja en el impacto que en el setup; no hay extensión temprana"}
   ],
   drills_with_ball:[
-    {name:"Línea de toalla", reps:"15 bolas, hierro 9", animation:"low_point",
+    {name:"Línea de toalla", reps:"15 bolas, hierro 9", animation:"low_point", props:"towel",
      cue:"Una toalla 15 cm por detrás de la bola. **Golpea la bola sin tocar la toalla**. Si la tocas, tu punto bajo está retrasado.",
      check:"La toalla no se mueve; la chuleta empieza por delante de la bola; el cuerpo no se queda atrás"},
     {name:"Golpes de compresión a media subida", reps:"12 bolas", animation:"shaft_lean",
      cue:"Medio backswing, foco total en **manos por delante al impacto**. Busca un vuelo más bajo y un sonido más seco.",
      check:"El shaft se inclina hacia el objetivo en el impacto; la muñeca de arriba no se arquea hacia atrás; el cuerpo sigue girando"},
-    {name:"Tee bajísimo con hierro", reps:"12 bolas, hierro 8", animation:"low_point",
+    {name:"Tee bajísimo con hierro", reps:"12 bolas, hierro 8", animation:"low_point", props:"tee",
      cue:"Tee apenas sobresaliendo del suelo. **Debes llevarte el tee después de la bola**, nunca antes.",
      check:"El tee sale por delante de la bola; no hay golpes gordos ni topped"},
     {name:"Vuelo bajo deliberado", reps:"12 bolas, hierro 7", animation:"shaft_lean",
      cue:"Busca un vuelo **un 30 % más bajo** manteniendo la distancia. Solo sale con las manos adelante.",
      check:"El vuelo es visiblemente más bajo; el sonido del impacto es más seco y compacto"},
-    {name:"Bola de referencia por detrás", reps:"10 bolas", animation:"low_point",
+    {name:"Bola de referencia por detrás", reps:"10 bolas", animation:"low_point", props:"ball2",
      cue:"Una segunda bola 10 cm por detrás de la de juego. **Golpea la de delante sin tocar la de atrás.**",
      check:"La bola trasera no se mueve; el ataque es claramente descendente"},
     {name:"Punch de media altura", reps:"12 bolas, hierro 6", animation:"shaft_lean",
@@ -906,7 +906,7 @@ const LESSONS = [
     {name:"Draw y fade por rotación", reps:"16 bolas, hierro 7", animation:"release_face",
      cue:"Ocho golpes con rotación extra de antebrazos, ocho frenando la cara. **Aprende a sentir la diferencia.**",
      check:"Hay diferencia visible de rotación de antebrazos entre ambas series; el cuerpo sigue girando en las dos"},
-    {name:"Pasillo de dos tees pasada la bola", reps:"12 bolas", animation:"extension",
+    {name:"Pasillo de dos tees pasada la bola", reps:"12 bolas", animation:"extension", props:"teegate",
      cue:"Dos tees formando un pasillo 30 cm por delante de la bola. **Extiende a través sin tocarlos.**",
      check:"El palo pasa por el pasillo sin derribar tees; no hay recogida prematura del palo"},
     {name:"Finish alto y completo", reps:"15 bolas, hierro 7", animation:"balance_hold",
@@ -1082,7 +1082,7 @@ function buildBody(P, opt){
   const T = turn => p => rZ(rX(rY(p, turn*RAD), hi), ti);
   const Tp = T(P.pel), Tc = T(P.ch);
 
-  const pelvis = v3(P.sw, B.pelY, B.pelZ - 16*Math.sin(hi));
+  const pelvis = v3(P.sw, opt.pelY || B.pelY, B.pelZ - 16*Math.sin(hi));
   const chest  = add(pelvis, mul(axis, B.spine));
   const hub    = add(pelvis, mul(axis, B.hub));
   const neck   = add(pelvis, mul(axis, B.neck));
@@ -1133,7 +1133,7 @@ function limb(outline, fill, pts, w){
    ESCENA DE SWING
    =================================================================== */
 function swingScene(opt){
-  return function(host){
+  return function(host, propsOverride){
     host.innerHTML = "";
     const VW = 340, VH = 232;
     const svg = E("svg",{viewBox:`0 0 ${VW} ${VH}`,"aria-hidden":"true"}, host);
@@ -1189,7 +1189,12 @@ function swingScene(opt){
       "stroke-linejoin":"round"},gClub);
 
     const ov = buildOverlay(opt.overlay, gOver, gUI, VW, VH);
-    const props = buildProps(opt.props, gProps, gFront);
+    const propKinds = (propsOverride !== null && propsOverride !== undefined
+      ? propsOverride : opt.props) || "";
+    const props = buildProps(propKinds, gProps, gFront);
+    const hideClub = /clubshoulders|clubspine|stool|bandarms/.test(propKinds);
+    // sentado en el taburete: la pelvis baja y las rodillas se doblan solas por IK
+    const bodyOpt = /stool/.test(propKinds) ? Object.assign({}, opt, {pelY:56}) : opt;
 
     /* --- cámara orientable con el dedo --- */
     const base = Object.assign({az:0, el:4, pivot:v3(0,124,-40)}, opt.cam||{});
@@ -1248,11 +1253,11 @@ function swingScene(opt){
         P.phi = Math.max(-c, Math.min(c, P.phi));
         P.co  = Math.max(-c*0.8, Math.min(c*0.8, P.co));
       }
-      const b = buildBody(P, opt);
+      const b = buildBody(P, bodyOpt);
       const p = cam;
 
       if(!ballPos){
-        const a0 = buildBody(poseAt(0), opt);
+        const a0 = buildBody(poseAt(0), bodyOpt);
         ballPos = v3(a0.chead.x, 2.2, a0.chead.z);
       }
 
@@ -1336,7 +1341,9 @@ function swingScene(opt){
         `${(ch.x-px*hw+Math.cos(sd)*hh).toFixed(1)},${(ch.y-py*hw+Math.sin(sd)*hh).toFixed(1)}`);
 
       gFig.style.opacity = P.fd.toFixed(2);
-      gClub.style.opacity = P.fd.toFixed(2);
+      // si el palo se usa como referencia (hombros, columna) o el ejercicio es
+      // sentado, el jugador no lo lleva además en las manos
+      gClub.style.opacity = hideClub ? 0 : P.fd.toFixed(2);
       if(props) props(b, p, t, P, ballPos);
       if(ov) ov(b, p, t, P, ballPos);
     }
@@ -1492,17 +1499,19 @@ function buildProps(kind, gBack, gFront){
     });
   }
 
-  if(kinds.includes("chair")){
+  if(kinds.includes("chair") || kinds.includes("chairback") || kinds.includes("chairfront")){
     const seat = box(gBack, "#8A6A46"), bk = box(gBack, "#8A6A46");
     const legs = [0,1,2,3].map(()=>box(gBack, "#6B5236"));
-    draws.push(()=>{});
-    draws[draws.length-1] = (b,p)=>{
-      const cx = -46, cz = B.pelZ - 16;
-      seat.set(p, v3(cx,45,cz), v3(42,5,40));
-      bk.set(p,  v3(cx,67,cz-18), v3(42,45,5));
+    // posición según el ejercicio: cadera trasera, justo detrás, o delante del pie trasero
+    const pos = kinds.includes("chairback")  ? {x:0,   z:B.pelZ-34, rot:0}
+              : kinds.includes("chairfront") ? {x:-40, z:B.pelZ+34, rot:0}
+              : {x:-48, z:B.pelZ-14, rot:0};
+    draws.push((b,p)=>{
+      seat.set(p, v3(pos.x,45,pos.z), v3(42,5,40));
+      bk.set(p,  v3(pos.x,67,pos.z-18), v3(42,45,5));
       [[-18,-17],[18,-17],[-18,17],[18,17]].forEach((o,i)=>
-        legs[i].set(p, v3(cx+o[0],22,cz+o[1]), v3(4,44,4)));
-    };
+        legs[i].set(p, v3(pos.x+o[0],22,pos.z+o[1]), v3(4,44,4)));
+    });
   }
 
   if(kinds.includes("bag")){
@@ -1526,6 +1535,133 @@ function buildProps(kind, gBack, gFront){
     draws.push((b,p)=>{
       const q = p(v3(-B.foot, 0.6, B.pelZ + 9));
       A(c,"cx",q.x);A(c,"cy",q.y);A(c,"rx",(4*q.k).toFixed(1));A(c,"ry",(1.8*q.k).toFixed(1));
+    });
+  }
+
+  /* --- palos usados como referencia --- */
+  if(kinds.includes("clubspine")){           // palo vertical: cabeza, dorsal y sacro
+    const sh = box(gFront, "#D8DEE2");
+    const pts = [0,1,2].map(()=>E("circle",{fill:"var(--gold)",opacity:.9},gFront));
+    draws.push((b,p)=>{
+      const a = b.pelvis, c = b.head;
+      const mid = v3((a.x+c.x)/2, (a.y+c.y)/2, Math.min(a.z,c.z)-11);
+      const L = Math.hypot(c.y-a.y, c.z-a.z) + 34;
+      sh.set(p, mid, v3(2.6, L, 2.6), 0);
+      [b.pelvis, b.chest, b.head].forEach((q,i)=>{
+        const r = p(v3(q.x, q.y, Math.min(a.z,c.z)-11));
+        A(pts[i],"cx",r.x);A(pts[i],"cy",r.y);A(pts[i],"r",(3.4*r.k).toFixed(1));
+      });
+    });
+  }
+  if(kinds.includes("clubshoulders")){       // palo cruzado sobre los hombros
+    const sh = box(gFront, "#D8DEE2");
+    const gr = box(gFront, "#2B3338");
+    draws.push((b,p)=>{
+      const m = v3((b.shL.x+b.shR.x)/2, (b.shL.y+b.shR.y)/2+7, (b.shL.z+b.shR.z)/2);
+      const ang = Math.atan2(b.shL.z-b.shR.z, b.shL.x-b.shR.x)/RAD;
+      sh.set(p, m, v3(118,2.6,2.6), -ang);
+      const d = {x:Math.cos(-ang*RAD), z:Math.sin(-ang*RAD)};
+      gr.set(p, v3(m.x-d.x*48, m.y, m.z+d.z*48), v3(22,4.4,4.4), -ang);
+    });
+  }
+  if(kinds.includes("clubforearms")){        // palo corto entre los antebrazos
+    const sh = box(gFront, "#C9A84C");
+    draws.push((b,p)=>{
+      const m = v3((b.elbL.x+b.elbR.x)/2, (b.elbL.y+b.elbR.y)/2, (b.elbL.z+b.elbR.z)/2);
+      const ang = Math.atan2(b.elbL.z-b.elbR.z, b.elbL.x-b.elbR.x)/RAD;
+      sh.set(p, m, v3(46,2.4,2.4), -ang);
+    });
+  }
+  if(kinds.includes("clubground")){          // palo en el suelo apuntando al esternón
+    const sh = box(gBack, "#D8DEE2");
+    draws.push((b,p)=>{
+      sh.set(p, v3(0, 1.3, B.pelZ + 26), v3(2.4, 2.4, 96), 0);
+    });
+  }
+  if(kinds.includes("towelarms")){           // toalla doblada bajo las axilas
+    const t = box(gFront, "#E6EDE8");
+    draws.push((b,p)=>{
+      const m = v3((b.shL.x+b.shR.x)/2, (b.shL.y+b.shR.y)/2-9, (b.shL.z+b.shR.z)/2+5);
+      const ang = Math.atan2(b.shL.z-b.shR.z, b.shL.x-b.shR.x)/RAD;
+      t.set(p, m, v3(46,9,7), -ang);
+    });
+  }
+  if(kinds.includes("bandhip")){             // banda elástica tirando de la cadera
+    const bd = E("path",{fill:"none",stroke:"#C9544C","stroke-width":5,
+      "stroke-linecap":"round",opacity:.9},gFront);
+    const anchor = box(gBack, "#6B5236");
+    draws.push((b,p)=>{
+      const l = p(b.hipL), r = p(b.hipR);
+      const a = p(v3(0, 36, B.pelZ + 86));
+      A(bd,"d",`M ${l.x} ${l.y} Q ${(l.x+a.x)/2} ${(l.y+a.y)/2-10}, ${a.x} ${a.y} `+
+               `Q ${(r.x+a.x)/2} ${(r.y+a.y)/2-10}, ${r.x} ${r.y}`);
+      anchor.set(p, v3(0, 14, B.pelZ + 92), v3(16,28,10), 0);
+    });
+  }
+  if(kinds.includes("bandarms")){            // banda rodeando los dos brazos
+    const bd = E("ellipse",{fill:"none",stroke:"#C9544C","stroke-width":4.5,opacity:.9},gFront);
+    draws.push((b,p)=>{
+      const m = p(v3((b.elbL.x+b.elbR.x)/2,(b.elbL.y+b.elbR.y)/2,(b.elbL.z+b.elbR.z)/2));
+      A(bd,"cx",m.x);A(bd,"cy",m.y);
+      A(bd,"rx",(16*m.k).toFixed(1));A(bd,"ry",(7*m.k).toFixed(1));
+    });
+  }
+  if(kinds.includes("stool")){               // taburete
+    const seat = box(gBack, "#8A6A46");
+    const legs = [0,1,2,3].map(()=>box(gBack, "#6B5236"));
+    draws.push((b,p)=>{
+      const cz = B.pelZ - 6;
+      seat.set(p, v3(0,47,cz), v3(40,6,34));
+      [[-15,-13],[15,-13],[-15,13],[15,13]].forEach((o,i)=>
+        legs[i].set(p, v3(o[0],22,cz+o[1]), v3(4,44,4)));
+    });
+  }
+  if(kinds.includes("phone")){               // móvil grabando de perfil
+    const body = box(gFront, "#1C2226");
+    const screen = face(gFront, "rgba(140,190,215,.5)", "rgba(226,240,245,.6)", 1);
+    const bag = box(gFront, "#2F6B52");
+    draws.push((b,p)=>{
+      const X = 96;
+      bag.set(p, v3(X, 22, -30), v3(20,44,26), 0);
+      body.set(p, v3(X-11, 54, -30), v3(3,30,16), 0);
+      screen.set(p, [v3(X-12.6,42,-37), v3(X-12.6,42,-23), v3(X-12.6,66,-23), v3(X-12.6,66,-37)]);
+    });
+  }
+  if(kinds.includes("line")){                // línea de tiza en el suelo
+    const l = face(gBack, "rgba(244,247,245,.85)", null, 0);
+    draws.push((b,p,t,P,ball)=>{
+      const x = ball ? ball.x : 0, z = ball ? ball.z : 0;
+      l.set(p, [v3(x-1.6,0.5,z-30), v3(x+1.6,0.5,z-30), v3(x+1.6,0.5,z+30), v3(x-1.6,0.5,z+30)]);
+    });
+  }
+  if(kinds.includes("ball2")){               // segunda bola de referencia
+    const c = E("circle",{fill:"#fff",opacity:.75},gBack);
+    const sh2 = E("ellipse",{fill:"rgba(0,0,0,.3)"},gBack);
+    draws.push((b,p,t,P,ball)=>{
+      const q = p(v3((ball?ball.x:0)-10, 2.2, ball?ball.z:0));
+      const g = p(v3((ball?ball.x:0)-10, 0.2, ball?ball.z:0));
+      A(sh2,"cx",g.x);A(sh2,"cy",g.y);A(sh2,"rx",(3.4*g.k).toFixed(1));A(sh2,"ry",(1.4*g.k).toFixed(1));
+      A(c,"cx",q.x);A(c,"cy",q.y);A(c,"r",(3.1*q.k).toFixed(1));
+    });
+  }
+  if(kinds.includes("teegate")){             // pasillo de dos tees pasada la bola
+    const t1 = box(gBack, "#E8E3DA"), t2 = box(gBack, "#E8E3DA");
+    draws.push((b,p,t,P,ball)=>{
+      const x = (ball?ball.x:0) + 30, z = ball?ball.z:0;
+      t1.set(p, v3(x, 3, z-9), v3(1.8,6,1.8));
+      t2.set(p, v3(x, 3, z+9), v3(1.8,6,1.8));
+    });
+  }
+  if(kinds.includes("teehigh")){             // tee alto
+    const tp = box(gBack, "#E8E3DA");
+    draws.push((b,p,t,P,ball)=>{
+      tp.set(p, v3(ball?ball.x:0, 5.5, ball?ball.z:0), v3(1.8,11,1.8));
+    });
+  }
+  if(kinds.includes("rail1")){               // una sola varilla, en la línea de pies
+    const segs = [0,1,2,3].map(i=>box(gBack, i%2 ? "#D8DEE2" : "#C9A84C"));
+    draws.push((b,p)=>{
+      segs.forEach((s,i)=> s.set(p, v3(-60+i*40, 1.2, B.pelZ + 16), v3(38,2.4,2.4)));
     });
   }
 
@@ -1818,7 +1954,7 @@ function mountScenes(root){
     const def = SCENES[el.dataset.scene];
     if(!def) return;
     el.dataset.mounted = "1";
-    const inst = def.create(el);
+    const inst = def.create(el, el.dataset.props || null);
     inst.speed = 1; inst.paused = REDUCED; inst.t = REDUCED ? (def.still||0.38) : 0;
     inst.visible = !io; inst.dirty = true;
     scenes.set(el.id, inst);
@@ -2406,13 +2542,13 @@ const SCENES = {
                      range:[0.06,0.82], clampPhi:92, overlay:"triangle", dur:4.6})},
   takeaway_triangle:{label:"El triángulo se mueve en bloque", still:1,
                    create: swingScene({cam:{az:-6,el:2,dist:290,fov:262},
-                     range:[0.06,0.26], pingpong:true, overlay:"triangle", props:"coin", dur:4.4})},
+                     range:[0.06,0.26], pingpong:true, overlay:"triangle", dur:4.4})},
   takeaway_path:  {label:"Por dentro y hacia arriba, no recto atrás", still:1,
                    create: swingScene({cam:{az:-74,el:8,dist:300,fov:262},
-                     range:[0.06,0.30], pingpong:true, overlay:"path", props:"headcover", dur:4.6})},
+                     range:[0.06,0.30], pingpong:true, overlay:"path", dur:4.6})},
   shoulder_turn:  {label:"90° de hombros sobre 45° de caderas", still:1,
                    create: swingScene({cam:{az:-4,el:6,dist:290,fov:262},
-                     range:[0.05,0.43], pingpong:true, overlay:"turn", props:"chair", dur:5})},
+                     range:[0.05,0.43], pingpong:true, overlay:"turn", dur:5})},
   wrist_set:      {label:"Ángulo antebrazo-palo a la altura de la cadera", still:1,
                    create: swingScene({cam:{az:-72,el:6,dist:250,fov:212,pivot:v3(0,118,-40)},
                      range:[0.06,0.40], pingpong:true, overlay:"wrist", dur:4.8})},
@@ -2430,24 +2566,24 @@ const SCENES = {
                      overlay:"beats", dur:5.6})},
   shaft_lean:     {label:"Manos por delante de la cabeza del palo", still:1,
                    create: swingScene({cam:{az:-70,el:6,dist:250,fov:250,pivot:v3(0,92,-26)},
-                     range:[0.548,0.586], pingpong:true, overlay:"lean", props:"bag", dur:4.4})},
+                     range:[0.548,0.586], pingpong:true, overlay:"lean", dur:4.4})},
   low_point:      {label:"El punto bajo cae por delante de la bola", still:.62,
                    create: swingScene({cam:{az:-76,el:10,dist:260,fov:252,pivot:v3(0,84,-26)},
-                     range:[0.46,0.76], overlay:"lowpoint", props:"towel+tee", dur:4.8})},
+                     range:[0.46,0.76], overlay:"lowpoint", dur:4.8})},
   finish_balance: {label:"Finish equilibrado, tres segundos", still:.9,
                    create: swingScene({cam:{az:-2,el:4,dist:300,fov:262},
                      range:[0.55,0.96], overlay:"balance", dur:5})},
   posture_hinge:  {label:"Bisagra desde la cadera, columna larga", still:1,
                    create: swingScene({cam:{az:-50,el:9,dist:300,fov:256},
-                     range:[0.0,0.0], pingpong:true, overlay:"hinge", props:"wall", dur:4.4,
+                     range:[0.0,0.0], pingpong:true, overlay:"hinge", dur:4.4,
                      poseHinge:true})},
 
   posture_profile:{label:"Perfil: hombros, manos y puntas alineados", still:1,
                    create: swingScene({cam:{az:-90,el:1,dist:260,fov:242,pivot:v3(0,98,-30)},
-                     range:[0,0.04], pingpong:true, overlay:"profile", props:"mirror", dur:4.2})},
+                     range:[0,0.04], pingpong:true, overlay:"profile", dur:4.2})},
   spine_angle:    {label:"La inclinación de columna no cambia al girar", still:1,
                    create: swingScene({cam:{az:-56,el:8,dist:310,fov:252},
-                     range:[0,0.42], pingpong:true, overlay:"hinge", props:"wall", dur:5})},
+                     range:[0,0.42], pingpong:true, overlay:"hinge", dur:5})},
   chest_turn_posture:{label:"Giro del pecho sin perder la postura", still:1,
                    create: swingScene({cam:{az:-42,el:15,dist:290,fov:256},
                      range:[0.02,0.40], pingpong:true, overlay:"turn", dur:5})},
@@ -2468,13 +2604,13 @@ const SCENES = {
                      stance:9, overlay:"balance", dur:5.4})},
   toe_up:         {label:"Puntera al cielo a la altura de la cadera", still:1,
                    create: swingScene({cam:{az:-72,el:6,dist:250,fov:226,pivot:v3(0,102,-30)},
-                     range:[0.07,0.22], pingpong:true, overlay:"path", props:"headcover", dur:4.2})},
+                     range:[0.07,0.22], pingpong:true, overlay:"path", dur:4.2})},
   extension:      {label:"Extensión completa a través de la bola", still:1,
                    create: swingScene({cam:{az:-70,el:6,dist:290,fov:252},
                      range:[0.60,0.75], pingpong:true, overlay:"turn", dur:4})},
   hip_clear:      {label:"La cadera rota, no se desliza", still:.6,
                    create: swingScene({cam:{az:-24,el:18,dist:310,fov:258},
-                     range:[0.42,0.68], overlay:"turn", props:"wallx", dur:4.4})},
+                     range:[0.42,0.68], overlay:"turn", dur:4.4})},
   balance_hold:   {label:"Todo el peso sobre el pie delantero", still:.9,
                    create: swingScene({cam:{az:-2,el:4,dist:300,fov:262},
                      range:[0.72,0.96], overlay:"balance", dur:4.6})},
@@ -2483,7 +2619,7 @@ const SCENES = {
   ball_position:  {label:"La bola avanza con el palo", create: diagramScene(DIAG.ball_position,6), still:.5},
   alignment_rails:{label:"Dos varillas: línea de bola y línea de pies", still:1,
                    create: swingScene({cam:{az:-52,el:30,dist:340,fov:252,pivot:v3(0,70,-30)},
-                     range:[0,0.04], pingpong:true, overlay:"aim", props:"rails", dur:5})},
+                     range:[0,0.04], pingpong:true, overlay:"aim", dur:5})},
   dispersion_cone:{label:"Apunta al centro de tu dispersión real", create: diagramScene(DIAG.dispersion_cone,6.4), still:.75},
   pre_shot_routine:{label:"Cuatro pasos, siempre en el mismo orden", create: diagramScene(DIAG.pre_shot_routine,6.4), still:.4}
 };
@@ -2532,12 +2668,12 @@ const ICON = {
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
 };
 
-function animBox(key){
+function animBox(key, props){
   const def = SCENES[key];
   if(!def) return "";
   const id = "sc"+(++uid);
   return `<div class="animwrap">
-    <div class="animbox" id="${id}" data-scene="${key}"></div>
+    <div class="animbox" id="${id}" data-scene="${key}"${props?` data-props="${esc(props)}"`:""}></div>
     <div class="animctl">
       <button class="ictl" data-play="${id}">${REDUCED?"▶ Play":"⏸ Pausa"}</button>
       <button class="ictl" data-spd="${id}" data-v="1">1×</button>
@@ -3098,7 +3234,7 @@ function lessonHTML(l){
       <div class="drill-top"><div class="drill-name">${esc(d.name)}</div>
         <div class="drill-reps">${esc(d.reps)}</div></div>
       <div class="drill-cue">${md(d.cue).replace(/^<p>|<\/p>$/g,"")}</div>
-      ${animBox(d.animation)}
+      ${animBox(d.animation, d.props)}
       ${drillCheckBlock(l,d,key)}
     </div>`;
   };
