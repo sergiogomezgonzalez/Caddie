@@ -160,6 +160,14 @@ main{padding:0 16px 120px}
 .ictl:active{background:rgba(255,255,255,.07)}
 .ictl[data-spd]{font-variant-numeric:tabular-nums;min-width:52px;justify-content:center}
 .animlabel{font-size:12px;color:var(--muted-2);flex:1;text-align:right;line-height:1.3}
+.animbox{position:relative}
+.animbox.grabbing{cursor:grabbing}
+.spin{position:absolute;right:9px;bottom:8px;z-index:2;pointer-events:none;
+  font-size:10.5px;letter-spacing:.04em;color:rgba(244,247,245,.42);
+  background:rgba(8,42,32,.6);padding:3px 8px;border-radius:99px;
+  transition:opacity .3s}
+.animbox.rotated .spin{opacity:0}
+.ictl-r{min-width:42px;justify-content:center;font-size:15px;line-height:1}
 .animbox text{font-family:inherit;letter-spacing:.03em}
 .animbox .ov-g{fill:var(--gold);font-size:11px;font-weight:600}
 .animbox .ov-t{fill:rgba(244,247,245,.62);font-size:10.5px}
@@ -1137,9 +1145,11 @@ function swingScene(opt){
     const torsoFill = "url(#"+lg.getAttribute("id")+")";
 
     const gGround = E("g",null,svg);
+    const gProps  = E("g",null,svg);   // objetos detrás de la figura
     const gBack   = E("g",null,svg);
     const gFig    = E("g",null,svg);
     const gClub   = E("g",null,svg);
+    const gFront  = E("g",null,svg);   // objetos delante de la figura
     const gOver   = E("g",null,svg);
     const gUI     = E("g",null,svg);
 
@@ -1179,10 +1189,51 @@ function swingScene(opt){
       "stroke-linejoin":"round"},gClub);
 
     const ov = buildOverlay(opt.overlay, gOver, gUI, VW, VH);
+    const props = buildProps(opt.props, gProps, gFront);
 
-    const cam = mkCam(Object.assign({pivot:v3(0,124,-40)}, opt.cam||{}));
+    /* --- cámara orientable con el dedo --- */
+    const base = Object.assign({az:0, el:4, pivot:v3(0,124,-40)}, opt.cam||{});
+    const view = {az: base.az, el: base.el, dragged:false};
+    let cam = mkCam(base);
+    const rebuild = () => { cam = mkCam(Object.assign({}, base, {az:view.az, el:view.el})); };
+
+    svg.style.touchAction = "pan-y";   // el scroll vertical de la página sigue funcionando
+    const hint = document.createElement("span");
+    hint.className = "spin";
+    hint.textContent = "⟳ arrastra para girar";
+    host.appendChild(hint);
+    let drag = null;
+    const host2 = host;
+    svg.addEventListener("pointerdown", e=>{
+      drag = {x:e.clientX, y:e.clientY, az:view.az, el:view.el};
+      svg.setPointerCapture(e.pointerId);
+      host2.classList.add("grabbing");
+    });
+    svg.addEventListener("pointermove", e=>{
+      if(!drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if(Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+      view.az = drag.az - dx*0.6;
+      view.el = Math.max(-12, Math.min(58, drag.el + dy*0.35));
+      view.dragged = true;
+      rebuild();
+      const s = scenes.get(host2.id); if(s) s.dirty = true;
+      host2.classList.add("rotated");
+    });
+    const endDrag = e => { if(drag){ drag = null; host2.classList.remove("grabbing");
+      try{ svg.releasePointerCapture(e.pointerId); }catch(_){} } };
+    svg.addEventListener("pointerup", endDrag);
+    svg.addEventListener("pointercancel", endDrag);
+
     const trail = [];
     let lastT = -9, ballPos = null;
+
+    function resetView(){
+      view.az = base.az; view.el = base.el; view.dragged = false;
+      rebuild(); host.classList.remove("rotated");
+      const s = scenes.get(host.id); if(s) s.dirty = true;
+    }
+    host.__resetView = resetView;
 
     function draw(tt){
       const t = mapPhase(tt, opt);
@@ -1286,6 +1337,7 @@ function swingScene(opt){
 
       gFig.style.opacity = P.fd.toFixed(2);
       gClub.style.opacity = P.fd.toFixed(2);
+      if(props) props(b, p, t, P, ballPos);
       if(ov) ov(b, p, t, P, ballPos);
     }
 
@@ -1302,6 +1354,194 @@ function mapPhase(t, o){
   }
   return r[0] + t*(r[1]-r[0]);
 }
+/* ===================================================================
+   OBJETOS DE REFERENCIA EN 3D (pared, varillas, toalla, silla…)
+   =================================================================== */
+/** Polígono 3D: devuelve {el, update(p, pts)} y guarda su profundidad media. */
+function face(parent, fill, stroke, sw){
+  const e = E("polygon",{fill:fill||"none"},parent);
+  if(stroke){ A(e,"stroke",stroke); A(e,"stroke-width",sw||1.2); A(e,"stroke-linejoin","round"); }
+  return {
+    el: e,
+    set(p, pts){
+      const q = pts.map(p);
+      A(e,"points", poly(q));
+      e.__z = q.reduce((s,r)=>s+r.z,0)/q.length;
+      return e.__z;
+    }
+  };
+}
+/** Caja 3D con sombreado por cara. */
+function box(parent, base, light){
+  const sh = ["#000","#000","#000","#000","#000","#000"];
+  const f = [0.62,0.78,1.0,0.86,0.70,0.55].map(k=>face(parent, shade(base,k), "rgba(0,0,0,.35)", 1));
+  return {
+    faces: f,
+    set(p, c, s, rotY){
+      const h = {x:s.x/2, y:s.y/2, z:s.z/2};
+      const V = (i,j,k)=>{
+        let q = v3(i*h.x, j*h.y, k*h.z);
+        if(rotY) q = rY(q, rotY*RAD);
+        return v3(c.x+q.x, c.y+q.y, c.z+q.z);
+      };
+      const v = {
+        a:V(-1,-1,-1), b:V(1,-1,-1), c:V(1,-1,1), d:V(-1,-1,1),
+        e:V(-1,1,-1),  f:V(1,1,-1),  g:V(1,1,1),  h:V(-1,1,1)
+      };
+      const quads = [
+        [v.e,v.f,v.g,v.h],  // arriba
+        [v.a,v.b,v.c,v.d],  // abajo
+        [v.d,v.c,v.g,v.h],  // frente (+z)
+        [v.b,v.a,v.e,v.f],  // atrás
+        [v.a,v.d,v.h,v.e],  // izq
+        [v.c,v.b,v.f,v.g]   // dcha
+      ];
+      quads.forEach((qd,i)=> f[i].set(p, qd));
+      // pinta de atrás hacia delante, pero solo toca el DOM si el orden cambió
+      const order = f.map((ff,i)=>({i, z:ff.el.__z})).sort((a,b)=>b.z-a.z)
+        .map(o=>o.i).join("");
+      if(order !== this.__order){
+        this.__order = order;
+        for(const i of order) parent.appendChild(f[+i].el);
+      }
+    }
+  };
+}
+function shade(hex, k){
+  const n = parseInt(hex.slice(1),16);
+  const r = Math.min(255,Math.round(((n>>16)&255)*k));
+  const g = Math.min(255,Math.round(((n>>8)&255)*k));
+  const b = Math.min(255,Math.round((n&255)*k));
+  return `rgb(${r},${g},${b})`;
+}
+
+function buildProps(kind, gBack, gFront){
+  if(!kind) return null;
+  const kinds = String(kind).split("+");
+  const draws = [];
+
+  if(kinds.includes("wall")){
+    // pared vertical detrás del jugador, con rodapié y juntas
+    const panel = face(gBack, "rgba(214,222,216,.13)", "rgba(244,247,245,.30)", 1.4);
+    const skirt = face(gBack, "rgba(244,247,245,.22)", "rgba(244,247,245,.34)", 1);
+    const seams = [0,1,2].map(()=>E("line",{stroke:"rgba(244,247,245,.13)","stroke-width":1},gBack));
+    const floorLine = E("line",{stroke:"rgba(244,247,245,.26)","stroke-width":1.4},gBack);
+    const WZ = B.pelZ - 26;
+    draws.push((b,p)=>{
+      panel.set(p, [v3(-150,0,WZ), v3(150,0,WZ), v3(150,215,WZ), v3(-150,215,WZ)]);
+      skirt.set(p, [v3(-150,0,WZ), v3(150,0,WZ), v3(150,11,WZ), v3(-150,11,WZ)]);
+      seams.forEach((s,i)=>{
+        const x = -75 + i*75;
+        const a = p(v3(x,11,WZ)), c = p(v3(x,215,WZ));
+        A(s,"x1",a.x);A(s,"y1",a.y);A(s,"x2",c.x);A(s,"y2",c.y);
+      });
+      const a = p(v3(-150,0,WZ)), c = p(v3(150,0,WZ));
+      A(floorLine,"x1",a.x);A(floorLine,"y1",a.y);A(floorLine,"x2",c.x);A(floorLine,"y2",c.y);
+    });
+  }
+
+  if(kinds.includes("wallx")){
+    // pared lateral: el jugador apoya la cadera delantera contra ella
+    const panel = face(gBack, "rgba(214,222,216,.13)", "rgba(244,247,245,.30)", 1.4);
+    const skirt = face(gBack, "rgba(244,247,245,.22)", "rgba(244,247,245,.34)", 1);
+    const seams = [0,1].map(()=>E("line",{stroke:"rgba(244,247,245,.13)","stroke-width":1},gBack));
+    const WX = 46;
+    draws.push((b,p)=>{
+      panel.set(p, [v3(WX,0,-140), v3(WX,0,90), v3(WX,200,90), v3(WX,200,-140)]);
+      skirt.set(p, [v3(WX,0,-140), v3(WX,0,90), v3(WX,11,90), v3(WX,11,-140)]);
+      seams.forEach((sm,i)=>{
+        const z = -60 + i*70;
+        const a = p(v3(WX,11,z)), c = p(v3(WX,200,z));
+        A(sm,"x1",a.x);A(sm,"y1",a.y);A(sm,"x2",c.x);A(sm,"y2",c.y);
+      });
+    });
+  }
+
+  if(kinds.includes("rails")){
+    // dos varillas de alineación en el suelo, con punteras
+    const mk = col => {
+      const segs = [0,1,2,3].map(i=>box(gBack, i%2 ? "#D8DEE2" : col));
+      return segs;
+    };
+    const r1 = mk("#C9A84C"), r2 = mk("#E0675B");
+    draws.push((b,p,t,P,ball)=>{
+      const z1 = ball ? ball.z : 0, z2 = B.pelZ + 16;
+      r1.forEach((s,i)=> s.set(p, v3(-60+i*40, 1.2, z1), v3(38,2.4,2.4)));
+      r2.forEach((s,i)=> s.set(p, v3(-60+i*40, 1.2, z2), v3(38,2.4,2.4)));
+    });
+  }
+
+  if(kinds.includes("towel")){
+    const t1 = face(gBack, "rgba(244,247,245,.80)", "rgba(0,0,0,.35)", 1);
+    const t2 = face(gBack, "rgba(201,168,76,.75)", "rgba(0,0,0,.3)", 1);
+    draws.push((b,p,t,P,ball)=>{
+      const x = (ball ? ball.x : 0) - 16, z = ball ? ball.z : 0;
+      t1.set(p, [v3(x-15,0.6,z-20), v3(x+15,0.6,z-20), v3(x+15,0.6,z+20), v3(x-15,0.6,z+20)]);
+      t2.set(p, [v3(x-15,1.0,z-6), v3(x+15,1.0,z-6), v3(x+15,1.0,z+2), v3(x-15,1.0,z+2)]);
+    });
+  }
+
+  if(kinds.includes("headcover")){
+    const bd = box(gBack, "#2F6B52");
+    const tip = E("ellipse",{fill:"#C9A84C"},gBack);
+    draws.push((b,p,t,P,ball)=>{
+      const x = (ball ? ball.x : 0) - 8, z = (ball ? ball.z : 0) + 20;
+      bd.set(p, v3(x,10,z), v3(21,20,19));
+      const q = p(v3(x,20.5,z));
+      A(tip,"cx",q.x);A(tip,"cy",q.y);A(tip,"rx",(11*q.k).toFixed(1));A(tip,"ry",(6*q.k).toFixed(1));
+    });
+  }
+
+  if(kinds.includes("chair")){
+    const seat = box(gBack, "#8A6A46"), bk = box(gBack, "#8A6A46");
+    const legs = [0,1,2,3].map(()=>box(gBack, "#6B5236"));
+    draws.push(()=>{});
+    draws[draws.length-1] = (b,p)=>{
+      const cx = -46, cz = B.pelZ - 16;
+      seat.set(p, v3(cx,45,cz), v3(42,5,40));
+      bk.set(p,  v3(cx,67,cz-18), v3(42,45,5));
+      [[-18,-17],[18,-17],[-18,17],[18,17]].forEach((o,i)=>
+        legs[i].set(p, v3(cx+o[0],22,cz+o[1]), v3(4,44,4)));
+    };
+  }
+
+  if(kinds.includes("bag")){
+    const bg = box(gFront, "#B9452F");
+    draws.push((b,p,t,P,ball)=>{
+      const x = (ball ? ball.x : 0) + 2, z = ball ? ball.z : 0;
+      bg.set(p, v3(x,16,z), v3(34,32,22));
+    });
+  }
+
+  if(kinds.includes("tee")){
+    const tp = box(gBack, "#E8E3DA");
+    draws.push((b,p,t,P,ball)=>{
+      const x = (ball ? ball.x : 0), z = ball ? ball.z : 0;
+      tp.set(p, v3(x,2.5,z), v3(1.8,5,1.8));
+    });
+  }
+
+  if(kinds.includes("coin")){
+    const c = E("ellipse",{fill:"#C9A84C",stroke:"rgba(0,0,0,.4)","stroke-width":1},gBack);
+    draws.push((b,p)=>{
+      const q = p(v3(-B.foot, 0.6, B.pelZ + 9));
+      A(c,"cx",q.x);A(c,"cy",q.y);A(c,"rx",(4*q.k).toFixed(1));A(c,"ry",(1.8*q.k).toFixed(1));
+    });
+  }
+
+  if(kinds.includes("mirror")){
+    const gl = face(gFront, "rgba(180,210,225,.16)", "rgba(226,240,245,.5)", 1.6);
+    const fr = face(gFront, "none", "rgba(201,168,76,.75)", 3);
+    draws.push((b,p)=>{
+      const MX = 86;
+      const pts = [v3(MX,6,-96), v3(MX,6,16), v3(MX,190,16), v3(MX,190,-96)];
+      gl.set(p, pts); fr.set(p, pts);
+    });
+  }
+
+  return (b,p,t,P,ball) => draws.forEach(d => d(b,p,t,P,ball));
+}
+
 /* ===================================================================
    CAPAS DE DATOS SOBRE LA ANIMACIÓN
    =================================================================== */
@@ -1513,6 +1753,24 @@ function buildOverlay(kind, g, ui, VW, VH){
     };
   }
 
+  if(kind === "aim"){
+    const line = E("line",{stroke:"var(--gold)","stroke-width":1.6,
+      "stroke-dasharray":"5 4"},g);
+    const flag = E("path",{fill:"var(--gold)"},g);
+    const pole = E("line",{stroke:"rgba(244,247,245,.7)","stroke-width":1.6},g);
+    const t1 = txt(10,18,"ov-g"), t2 = txt(10,33,"ov-t");
+    return (b,p,t,P,ball)=>{
+      const z = ball ? ball.z : 0;
+      const a = p(v3(ball?ball.x:0, 1, z)), c = p(v3(150, 1, z));
+      A(line,"x1",a.x);A(line,"y1",a.y);A(line,"x2",c.x);A(line,"y2",c.y);
+      const top = p(v3(150, 34, z));
+      A(pole,"x1",c.x);A(pole,"y1",c.y);A(pole,"x2",top.x);A(pole,"y2",top.y);
+      A(flag,"d",`M ${top.x} ${top.y} l ${12*top.k} ${4*top.k} l ${-12*top.k} ${5*top.k} Z`);
+      t1.textContent = "Línea de bola y línea de pies";
+      t2.textContent = "Paralelas, como dos raíles";
+    };
+  }
+
   if(kind === "path"){
     const gate = E("circle",{fill:"none",stroke:"var(--green)","stroke-width":1.8,
       "stroke-dasharray":"3 3"},g);
@@ -1564,6 +1822,10 @@ function mountScenes(root){
     inst.speed = 1; inst.paused = REDUCED; inst.t = REDUCED ? (def.still||0.38) : 0;
     inst.visible = !io; inst.dirty = true;
     scenes.set(el.id, inst);
+    if(!el.__resetView){
+      const rb = document.querySelector(`[data-view="${el.id}"]`);
+      if(rb) rb.style.display = "none";
+    }
     if(io) io.observe(el);
   });
 }
@@ -2144,13 +2406,13 @@ const SCENES = {
                      range:[0.06,0.82], clampPhi:92, overlay:"triangle", dur:4.6})},
   takeaway_triangle:{label:"El triángulo se mueve en bloque", still:1,
                    create: swingScene({cam:{az:-6,el:2,dist:290,fov:262},
-                     range:[0.06,0.26], pingpong:true, overlay:"triangle", dur:4.4})},
+                     range:[0.06,0.26], pingpong:true, overlay:"triangle", props:"coin", dur:4.4})},
   takeaway_path:  {label:"Por dentro y hacia arriba, no recto atrás", still:1,
                    create: swingScene({cam:{az:-74,el:8,dist:300,fov:262},
-                     range:[0.06,0.30], pingpong:true, overlay:"path", dur:4.6})},
+                     range:[0.06,0.30], pingpong:true, overlay:"path", props:"headcover", dur:4.6})},
   shoulder_turn:  {label:"90° de hombros sobre 45° de caderas", still:1,
                    create: swingScene({cam:{az:-4,el:6,dist:290,fov:262},
-                     range:[0.05,0.43], pingpong:true, overlay:"turn", dur:5})},
+                     range:[0.05,0.43], pingpong:true, overlay:"turn", props:"chair", dur:5})},
   wrist_set:      {label:"Ángulo antebrazo-palo a la altura de la cadera", still:1,
                    create: swingScene({cam:{az:-72,el:6,dist:250,fov:212,pivot:v3(0,118,-40)},
                      range:[0.06,0.40], pingpong:true, overlay:"wrist", dur:4.8})},
@@ -2168,24 +2430,24 @@ const SCENES = {
                      overlay:"beats", dur:5.6})},
   shaft_lean:     {label:"Manos por delante de la cabeza del palo", still:1,
                    create: swingScene({cam:{az:-70,el:6,dist:250,fov:250,pivot:v3(0,92,-26)},
-                     range:[0.548,0.586], pingpong:true, overlay:"lean", dur:4.4})},
+                     range:[0.548,0.586], pingpong:true, overlay:"lean", props:"bag", dur:4.4})},
   low_point:      {label:"El punto bajo cae por delante de la bola", still:.62,
                    create: swingScene({cam:{az:-76,el:10,dist:260,fov:252,pivot:v3(0,84,-26)},
-                     range:[0.46,0.76], overlay:"lowpoint", dur:4.8})},
+                     range:[0.46,0.76], overlay:"lowpoint", props:"towel+tee", dur:4.8})},
   finish_balance: {label:"Finish equilibrado, tres segundos", still:.9,
                    create: swingScene({cam:{az:-2,el:4,dist:300,fov:262},
                      range:[0.55,0.96], overlay:"balance", dur:5})},
   posture_hinge:  {label:"Bisagra desde la cadera, columna larga", still:1,
-                   create: swingScene({cam:{az:-84,el:4,dist:280,fov:258},
-                     range:[0.0,0.0], pingpong:true, overlay:"hinge", dur:4.4,
+                   create: swingScene({cam:{az:-50,el:9,dist:300,fov:256},
+                     range:[0.0,0.0], pingpong:true, overlay:"hinge", props:"wall", dur:4.4,
                      poseHinge:true})},
 
   posture_profile:{label:"Perfil: hombros, manos y puntas alineados", still:1,
                    create: swingScene({cam:{az:-90,el:1,dist:260,fov:242,pivot:v3(0,98,-30)},
-                     range:[0,0.04], pingpong:true, overlay:"profile", dur:4.2})},
+                     range:[0,0.04], pingpong:true, overlay:"profile", props:"mirror", dur:4.2})},
   spine_angle:    {label:"La inclinación de columna no cambia al girar", still:1,
-                   create: swingScene({cam:{az:-80,el:4,dist:300,fov:252},
-                     range:[0,0.42], pingpong:true, overlay:"hinge", dur:5})},
+                   create: swingScene({cam:{az:-56,el:8,dist:310,fov:252},
+                     range:[0,0.42], pingpong:true, overlay:"hinge", props:"wall", dur:5})},
   chest_turn_posture:{label:"Giro del pecho sin perder la postura", still:1,
                    create: swingScene({cam:{az:-42,el:15,dist:290,fov:256},
                      range:[0.02,0.40], pingpong:true, overlay:"turn", dur:5})},
@@ -2206,20 +2468,22 @@ const SCENES = {
                      stance:9, overlay:"balance", dur:5.4})},
   toe_up:         {label:"Puntera al cielo a la altura de la cadera", still:1,
                    create: swingScene({cam:{az:-72,el:6,dist:250,fov:226,pivot:v3(0,102,-30)},
-                     range:[0.07,0.22], pingpong:true, overlay:"path", dur:4.2})},
+                     range:[0.07,0.22], pingpong:true, overlay:"path", props:"headcover", dur:4.2})},
   extension:      {label:"Extensión completa a través de la bola", still:1,
                    create: swingScene({cam:{az:-70,el:6,dist:290,fov:252},
                      range:[0.60,0.75], pingpong:true, overlay:"turn", dur:4})},
   hip_clear:      {label:"La cadera rota, no se desliza", still:.6,
-                   create: swingScene({cam:{az:-6,el:17,dist:300,fov:262},
-                     range:[0.42,0.68], overlay:"turn", dur:4.4})},
+                   create: swingScene({cam:{az:-24,el:18,dist:310,fov:258},
+                     range:[0.42,0.68], overlay:"turn", props:"wallx", dur:4.4})},
   balance_hold:   {label:"Todo el peso sobre el pie delantero", still:.9,
                    create: swingScene({cam:{az:-2,el:4,dist:300,fov:262},
                      range:[0.72,0.96], overlay:"balance", dur:4.6})},
 
   stance_width:   {label:"Pies bajo los hombros", create: diagramScene(DIAG.stance_width,4.6), still:1},
   ball_position:  {label:"La bola avanza con el palo", create: diagramScene(DIAG.ball_position,6), still:.5},
-  alignment_rails:{label:"Carriles: pies paralelos, no a bandera", create: diagramScene(DIAG.alignment_rails,4.8), still:1},
+  alignment_rails:{label:"Dos varillas: línea de bola y línea de pies", still:1,
+                   create: swingScene({cam:{az:-52,el:30,dist:340,fov:252,pivot:v3(0,70,-30)},
+                     range:[0,0.04], pingpong:true, overlay:"aim", props:"rails", dur:5})},
   dispersion_cone:{label:"Apunta al centro de tu dispersión real", create: diagramScene(DIAG.dispersion_cone,6.4), still:.75},
   pre_shot_routine:{label:"Cuatro pasos, siempre en el mismo orden", create: diagramScene(DIAG.pre_shot_routine,6.4), still:.4}
 };
@@ -2277,6 +2541,7 @@ function animBox(key){
     <div class="animctl">
       <button class="ictl" data-play="${id}">${REDUCED?"▶ Play":"⏸ Pausa"}</button>
       <button class="ictl" data-spd="${id}" data-v="1">1×</button>
+      <button class="ictl ictl-r" data-view="${id}" aria-label="Volver a la vista inicial">⟲</button>
       <span class="animlabel">${esc(def.label)}</span>
     </div>
   </div>`;
@@ -3069,6 +3334,12 @@ document.addEventListener("click", e=>{
     const s = scenes.get(play.dataset.play);
     if(s){ s.paused = !s.paused; s.dirty = true;
       play.textContent = s.paused ? "▶ Play" : "⏸ Pausa"; }
+    return;
+  }
+  const vw = e.target.closest("[data-view]");
+  if(vw){
+    const box = document.getElementById(vw.dataset.view);
+    if(box && box.__resetView) box.__resetView();
     return;
   }
   const spd = e.target.closest("[data-spd]");
